@@ -36,60 +36,44 @@ function carregarAgendamentosDoBanco() {
 }
 
 function criarCalendario(mes, ano) {
-  calendar.innerHTML = "";
-  mesAtualEl.textContent = `${nomesMeses[mes]} ${ano}`;
+  const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+  const primeiroDia = new Date(ano, mes, 1).getDay();
+  const ultimoDia = new Date(ano, mes + 1, 0).getDate();
 
-  const diasNoMes = new Date(ano, mes + 1, 0).getDate();
+  const calendario = document.getElementById('calendario');
+  calendario.innerHTML = ''; // Limpa calendário anterior
 
-  for (let dia = 1; dia <= diasNoMes; dia++) {
-    const dataDia = new Date(ano, mes, dia);
-    const diaSemana = diasSemana[dataDia.getDay()];
-    const idDia = `${dia}-${mes}-${ano}`;
+  for (let i = 0; i < primeiroDia; i++) {
+    const espaco = document.createElement('div');
+    espaco.classList.add('dia');
+    calendario.appendChild(espaco);
+  }
 
-    const divDia = document.createElement("div");
-    divDia.className = "day";
-    divDia.innerHTML = `<h3>${dia}</h3><p class="dia-sem">${diaSemana}</p>`;
+  for (let dia = 1; dia <= ultimoDia; dia++) {
+    const dataAtual = new Date(ano, mes, dia);
+    const diaSemana = diasSemana[dataAtual.getDay()];
 
-    let reservas = agendamentos[idDia] || [];
-    let qtdReservas = reservas.length;
-    let diaTodoMarcado = reservas.some(item => item.diaTodo);
+    const divDia = document.createElement('div');
+    divDia.classList.add('dia');
 
-    divDia.classList.remove("dia-verde", "dia-amarelo", "dia-vermelho");
-
-    if (qtdReservas >= 3 || diaTodoMarcado) {
-      divDia.classList.add("dia-vermelho");
-    } else if (qtdReservas === 2) {
-      divDia.classList.add("dia-amarelo");
-    } else if (qtdReservas === 1) {
-      divDia.classList.add("dia-verde");
-    }
-
-    if (qtdReservas < 3 && !diaTodoMarcado) {
-      const btnAdd = document.createElement("button");
-      btnAdd.className = "btn-plus";
-      btnAdd.innerText = "+";
-      btnAdd.onclick = () => abrirFormulario(idDia, dia, mes, ano);
-      divDia.appendChild(btnAdd);
-    }
-
-    reservas.forEach(item => {
-      const agendado = document.createElement("div");
-      agendado.className = "agendado";
-      agendado.textContent = `${item.nome} - ${item.horario}`;
-      divDia.appendChild(agendado);
-    });
-
-    // 🔴 Destaque do dia atual
+    // Verifica se é o dia atual
     const hoje = new Date();
-    if (
+    const isHoje =
       dia === hoje.getDate() &&
       mes === hoje.getMonth() &&
-      ano === hoje.getFullYear()
-    ) {
-      divDia.classList.add("hoje-vermelho");
-    }
+      ano === hoje.getFullYear();
 
-    calendar.appendChild(divDia);
+    const classeHoje = isHoje ? 'hoje-vermelho' : '';
+
+    divDia.innerHTML = `
+      <h3 class="${classeHoje}">${dia}</h3>
+      <p class="dia-sem">${diaSemana}</p>
+    `;
+
+    // Aqui você pode aplicar a lógica da faixa de cor
+    // ex: divDia.classList.add('faixa-verde') ou .faixa-amarela etc
+
+    calendario.appendChild(divDia);
   }
 }
 
