@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Terrazzo - Agenda Piscina</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>Agenda Piscina & Deck</h1>
+    <p>Condomínio Terrazzo</p>
+  </header>
+
+  <main>
+    <!-- Navegação entre meses -->
+    <div class="cabecalho-calendario">
+      <button id="btnAnterior">←</button>
+      <h2 id="mesAtual">Mês</h2>
+      <button id="btnProximo">→</button>
+    </div>
+
+    <!-- Calendário gerado pelo JS -->
+    <section id="calendar"></section>
+
+    <!-- Regras -->
+    <section id="rules">
+      <h2>Regras de Uso</h2>
+      <ul>
+        <li>Horário permitido: 08h às 20h</li>
+        <li>Máximo 6 pessoas por reserva</li>
+        <li>Tempo máximo: 2 horas</li>
+        <li>Evite som alto e respeite os horários</li>
+      </ul>
+    </section>
+  </main>
+
+  <!-- Script principal -->
+  <script src="script.js"></script>
+</body>
+</html>
