@@ -13,7 +13,7 @@ let anoAtual = hoje.getFullYear();
 let agendamentos = {};
 
 function carregarAgendamentosDoBanco() {
-  fetch("https://terrazzo-1.onrender.com/agendamentos")
+  fetch("https://terrazzo.onrender.com/agendamentos")
     .then(res => res.json())
     .then(dados => {
       agendamentos = {}; // zera pra evitar duplicações
@@ -133,7 +133,7 @@ function abrirFormulario(idDia, dia, mes, ano) {
     const horario = diaTodo ? "Dia inteiro" : `${inicio} - ${termino}`;
     const dataCompleta = new Date(ano, mes, dia).toISOString().split("T")[0];
 
-    fetch("https://terrazzo-1.onrender.com/agendamentos", {
+    fetch("https://terrazzo.onrender.com/agendamentos", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
