@@ -12,18 +12,14 @@ let anoAtual = hoje.getFullYear();
 
 let agendamentos = {};
 
-function gerarIdDia(dia, mes, ano) {
-  return `${dia}-${mes}-${ano}`;
-}
-
 function carregarAgendamentosDoBanco() {
   fetch("https://terrazzo-1.onrender.com/agendamentos")
     .then(res => res.json())
     .then(dados => {
-      agendamentos = {};
+      agendamentos = {}; // zera pra evitar duplicações
       dados.forEach(item => {
         const data = new Date(item.dia);
-        const idDia = gerarIdDia(data.getDate(), data.getMonth(), data.getFullYear());
+        const idDia = `${data.getDate()}-${data.getMonth()}-${data.getFullYear()}`;
 
         if (!agendamentos[idDia]) agendamentos[idDia] = [];
         agendamentos[idDia].push({
@@ -40,12 +36,13 @@ function carregarAgendamentosDoBanco() {
 function criarCalendario(mes, ano) {
   calendar.innerHTML = "";
   mesAtualEl.textContent = `${nomesMeses[mes]} ${ano}`;
+
   const diasNoMes = new Date(ano, mes + 1, 0).getDate();
 
   for (let dia = 1; dia <= diasNoMes; dia++) {
     const dataDia = new Date(ano, mes, dia);
     const diaSemana = diasSemana[dataDia.getDay()];
-    const idDia = gerarIdDia(dia, mes, ano);
+    const idDia = `${dia}-${mes}-${ano}`;
 
     const divDia = document.createElement("div");
     divDia.className = "day";
@@ -147,7 +144,7 @@ function abrirFormulario(idDia, dia, mes, ano) {
       })
     }).then(() => {
       document.body.removeChild(overlay);
-      carregarAgendamentosDoBanco(); // atualiza os dados do servidor
+      carregarAgendamentosDoBanco();
     });
   };
 
@@ -158,13 +155,13 @@ function abrirFormulario(idDia, dia, mes, ano) {
 btnAnterior.onclick = () => {
   mesAtual = (mesAtual === 0) ? 11 : mesAtual - 1;
   anoAtual = (mesAtual === 11) ? anoAtual - 1 : anoAtual;
-  carregarAgendamentosDoBanco();
+  criarCalendario(mesAtual, anoAtual);
 };
 
 btnProximo.onclick = () => {
   mesAtual = (mesAtual === 11) ? 0 : mesAtual + 1;
   anoAtual = (mesAtual === 0) ? anoAtual + 1 : anoAtual;
-  carregarAgendamentosDoBanco();
+  criarCalendario(mesAtual, anoAtual);
 };
 
-carregarAgendamentos
+carregarAgendamentosDoBanco();

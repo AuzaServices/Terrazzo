@@ -1,12 +1,15 @@
 const express = require("express");
 const mysql = require("mysql2");
-const cors = require("cors"); // Permitir requisições de outras origens
+const cors = require("cors");
+const path = require("path");
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(express.static("public")); // Servir arquivos estáticos
 
 // Conexão com MySQL
 const conexao = mysql.createConnection({
@@ -23,6 +26,11 @@ conexao.connect((err) => {
   } else {
     console.log("Conectado ao MySQL com sucesso!");
   }
+});
+
+// Rota principal que serve o index.html
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 // Rota para salvar agendamento
