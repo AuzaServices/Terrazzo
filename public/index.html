@@ -35,16 +35,6 @@
     </section>
   </main>
 
-  <!-- conteúdo do calendário aqui -->
-
-  <script>
-    const hoje = new Date().toISOString().split('T')[0];
-    const elementoHoje = document.querySelector(`[data-date="${hoje}"]`);
-    if (elementoHoje) {
-      elementoHoje.classList.add('hoje-vermelho');
-    }
-  </script>
-
   <!-- Script principal -->
   <script src="script.js"></script>
 </body>
