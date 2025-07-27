@@ -36,25 +36,18 @@ function carregarAgendamentosDoBanco() {
 }
 
 function criarCalendario(mes, ano) {
-  const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-  const primeiroDia = new Date(ano, mes, 1).getDay();
-  const ultimoDia = new Date(ano, mes + 1, 0).getDate();
+  calendar.innerHTML = "";
+  mesAtualEl.textContent = `${nomesMeses[mes]} ${ano}`;
 
-  const calendario = document.getElementById('calendario');
-  calendario.innerHTML = ''; // Limpa calendário anterior
+  const diasNoMes = new Date(ano, mes + 1, 0).getDate();
 
-  for (let i = 0; i < primeiroDia; i++) {
-    const espaco = document.createElement('div');
-    espaco.classList.add('dia');
-    calendario.appendChild(espaco);
-  }
+  for (let dia = 1; dia <= diasNoMes; dia++) {
+    const dataDia = new Date(ano, mes, dia);
+    const diaSemana = diasSemana[dataDia.getDay()];
+    const idDia = `${dia}-${mes}-${ano}`;
 
-  for (let dia = 1; dia <= ultimoDia; dia++) {
-    const dataAtual = new Date(ano, mes, dia);
-    const diaSemana = diasSemana[dataAtual.getDay()];
-
-    const divDia = document.createElement('div');
-    divDia.classList.add('dia');
+    const divDia = document.createElement("div");
+    divDia.className = "day";
 
     // Verifica se é o dia atual
     const hoje = new Date();
@@ -63,17 +56,43 @@ function criarCalendario(mes, ano) {
       mes === hoje.getMonth() &&
       ano === hoje.getFullYear();
 
-    const classeHoje = isHoje ? 'hoje-vermelho' : '';
+    const classeHoje = isHoje ? "hoje-vermelho" : "";
 
     divDia.innerHTML = `
       <h3 class="${classeHoje}">${dia}</h3>
       <p class="dia-sem">${diaSemana}</p>
     `;
 
-    // Aqui você pode aplicar a lógica da faixa de cor
-    // ex: divDia.classList.add('faixa-verde') ou .faixa-amarela etc
+    let reservas = agendamentos[idDia] || [];
+    let qtdReservas = reservas.length;
+    let diaTodoMarcado = reservas.some(item => item.diaTodo);
 
-    calendario.appendChild(divDia);
+    divDia.classList.remove("dia-verde", "dia-amarelo", "dia-vermelho");
+
+    if (qtdReservas >= 3 || diaTodoMarcado) {
+      divDia.classList.add("dia-vermelho");
+    } else if (qtdReservas === 2) {
+      divDia.classList.add("dia-amarelo");
+    } else if (qtdReservas === 1) {
+      divDia.classList.add("dia-verde");
+    }
+
+    if (qtdReservas < 3 && !diaTodoMarcado) {
+      const btnAdd = document.createElement("button");
+      btnAdd.className = "btn-plus";
+      btnAdd.innerText = "+";
+      btnAdd.onclick = () => abrirFormulario(idDia, dia, mes, ano);
+      divDia.appendChild(btnAdd);
+    }
+
+    reservas.forEach(item => {
+      const agendado = document.createElement("div");
+      agendado.className = "agendado";
+      agendado.textContent = `${item.nome} - ${item.horario}`;
+      divDia.appendChild(agendado);
+    });
+
+    calendar.appendChild(divDia);
   }
 }
 
