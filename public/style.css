@@ -232,3 +232,32 @@ input[type="checkbox"] {
   color: #e74c3c;
   font-weight: bold;
 }
+
+.cabecalho-calendario {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--branco);
+  border-radius: 8px;
+  padding: 10px 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+
+.cabecalho-calendario h2 {
+  flex-grow: 1;
+  text-align: center;
+  font-size: 1.3rem;
+  margin: 0;
+  font-weight: bold;
+}
+
+#btnAnterior,
+#btnProximo {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--azul);
+  font-weight: bold;
+}
