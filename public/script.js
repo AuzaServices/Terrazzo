@@ -9,14 +9,13 @@ const diasSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 let hoje = new Date();
 let mesAtual = hoje.getMonth();
 let anoAtual = hoje.getFullYear();
-
 let agendamentos = {};
 
 function carregarAgendamentosDoBanco() {
   fetch("https://terrazzo.onrender.com/agendamentos")
     .then(res => res.json())
     .then(dados => {
-      agendamentos = {}; // zera pra evitar duplicações
+      agendamentos = {};
       dados.forEach(item => {
         const data = new Date(item.dia);
         const idDia = `${data.getDate()}-${data.getMonth()}-${data.getFullYear()}`;
@@ -50,15 +49,18 @@ function criarCalendario(mes, ano) {
 
     let reservas = agendamentos[idDia] || [];
     let qtdReservas = reservas.length;
-    let diaTodoMarcado = reservas.some(item => item.diaTodo);
 
-    if (qtdReservas >= 2 || diaTodoMarcado) {
-      divDia.classList.add("dia-cheio");
-    } else if (qtdReservas >= 1) {
-      divDia.classList.add("dia-reservado");
+    // Cores por quantidade
+    if (qtdReservas === 1) {
+      divDia.classList.add("dia-verde");
+    } else if (qtdReservas === 2) {
+      divDia.classList.add("dia-amarelo");
+    } else if (qtdReservas >= 3) {
+      divDia.classList.add("dia-vermelho");
     }
 
-    if (!(qtdReservas >= 2 || diaTodoMarcado)) {
+    // Botão de adicionar apenas se tiver menos que 3
+    if (qtdReservas < 3) {
       const btnAdd = document.createElement("button");
       btnAdd.className = "btn-plus";
       btnAdd.innerText = "+";
@@ -164,6 +166,6 @@ btnProximo.onclick = () => {
   criarCalendario(mesAtual, anoAtual);
 };
 
-// 🔄 Atualização automática a cada 1 segundo
+// ⏱️ Recarregamento automático
 carregarAgendamentosDoBanco();
 setInterval(carregarAgendamentosDoBanco, 1000);

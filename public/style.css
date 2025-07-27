@@ -1,5 +1,5 @@
 :root {
-  --azul: #023c21;
+  --azul: #00481b;
   --fundo: #e6f7ff;
   --branco: #ffffff;
   --cinza: #cccccc;
@@ -156,14 +156,6 @@ main {
   position: relative;
 }
 
-.dia-reservado {
-  border-left-color: #fdd835; /* amarelo */
-}
-
-.dia-cheio {
-  border-left-color: #f44336; /* vermelho */
-}
-
 .btn-plus {
   position: absolute;
   right: 5px;
@@ -221,4 +213,19 @@ input[type="checkbox"] {
   margin-top: -11px;
   margin-left: -120px;
   white-space: nowrap;
+}
+
+.dia-verde {
+  background-color: #d4f4dd;
+  border: 2px solid #43a047;
+}
+
+.dia-amarelo {
+  background-color: #fff8c6;
+  border: 2px solid #fbc02d;
+}
+
+.dia-vermelho {
+  background-color: #f8d7da;
+  border: 2px solid #d32f2f;
 }
