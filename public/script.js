@@ -33,8 +33,6 @@ function carregarAgendamentosDoBanco() {
     });
 }
 
-setInterval(carregarAgendamentosDoBanco, 1000);
-
 function criarCalendario(mes, ano) {
   calendar.innerHTML = "";
   mesAtualEl.textContent = `${nomesMeses[mes]} ${ano}`;
@@ -166,4 +164,6 @@ btnProximo.onclick = () => {
   criarCalendario(mesAtual, anoAtual);
 };
 
+// 🔄 Atualização automática a cada 1 segundo
 carregarAgendamentosDoBanco();
+setInterval(carregarAgendamentosDoBanco, 1000);
