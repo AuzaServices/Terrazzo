@@ -12,11 +12,10 @@ body {
   color: #333;
 }
 
-header {
-  background-color: var(--azul);
-  color: white;
-  text-align: center;
-  padding: 20px;
+header img {
+  width: 100%;
+  max-height: 400px; /* ajusta altura máxima no desktop */
+  object-fit: cover;
 }
 
 main {
