@@ -150,10 +150,23 @@ main {
 }
 
 .day {
-  border-left: 5px solid transparent;
-  padding: 10px;
-  margin: 5px;
-  position: relative;
+  border-left: 5px solid transparent; /* padrão */
+  padding-left: 5px;
+}
+
+/* Verde para 1 reserva */
+.dia-verde {
+  border-left-color: #2ecc71;
+}
+
+/* Amarelo para 2 reservas */
+.dia-amarelo {
+  border-left-color: #f1c40f;
+}
+
+/* Vermelho para 3+ reservas ou dia inteiro */
+.dia-vermelho {
+  border-left-color: #e74c3c;
 }
 
 .btn-plus {
@@ -213,14 +226,4 @@ input[type="checkbox"] {
   margin-top: -11px;
   margin-left: -120px;
   white-space: nowrap;
-}
-
-.dia-verde {
-  background-color: #b2f2bb;
-}
-.dia-amarelo {
-  background-color: #fff3bf;
-}
-.dia-vermelho {
-  background-color: #ffa8a8;
 }
