@@ -162,7 +162,7 @@ function abrirFormulario(idDia, dia, mes, ano) {
       })
     }).then(() => {
       document.body.removeChild(overlay);
-      carregarAgendamentosDoBanco(); // ✅ apenas atualiza após agendar
+      carregarAgendamentosDoBanco();
     }).catch(err => {
       alert("Erro ao agendar. Tente novamente.");
       console.error(err);
@@ -185,6 +185,10 @@ btnProximo.onclick = () => {
   criarCalendario(mesAtual, anoAtual);
 };
 
-carregarAgendamentosDoBanco(); // ✅ carrega uma vez ao abrir
+// ⏳ Carrega ao abrir
+carregarAgendamentosDoBanco();
 
-// ❌ removido setInterval — sem atualizações automáticas
+// 🔁 Atualiza o calendário a cada 5 segundos
+setInterval(() => {
+  carregarAgendamentosDoBanco();
+}, 5000);
