@@ -30,7 +30,7 @@ function carregarAgendamentosDoBanco() {
         });
       });
 
-      criarCalendario(mesAtual, anoAtual); // atualiza só a área do calendário
+      criarCalendario(mesAtual, anoAtual);
     })
     .catch(err => console.error("Erro ao carregar agendamentos:", err));
 }
@@ -162,7 +162,7 @@ function abrirFormulario(idDia, dia, mes, ano) {
       })
     }).then(() => {
       document.body.removeChild(overlay);
-      carregarAgendamentosDoBanco(); // atualiza após agendar
+      carregarAgendamentosDoBanco(); // ✅ apenas atualiza após agendar
     }).catch(err => {
       alert("Erro ao agendar. Tente novamente.");
       console.error(err);
@@ -185,8 +185,6 @@ btnProximo.onclick = () => {
   criarCalendario(mesAtual, anoAtual);
 };
 
-carregarAgendamentosDoBanco(); // carrega ao abrir
+carregarAgendamentosDoBanco(); // ✅ carrega uma vez ao abrir
 
-setInterval(() => {
-  carregarAgendamentosDoBanco(); // 🔄 atualiza só o calendário, sem recarregar a página
-}, 2000);
+// ❌ removido setInterval — sem atualizações automáticas
