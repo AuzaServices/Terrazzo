@@ -3,11 +3,7 @@ const mesAtualEl = document.getElementById("mesAtual");
 const btnAnterior = document.getElementById("btnAnterior");
 const btnProximo = document.getElementById("btnProximo");
 
-const nomesMeses = [
-  "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
-];
-
+const nomesMeses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 const diasSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
 let hoje = new Date();
@@ -15,6 +11,27 @@ let mesAtual = hoje.getMonth();
 let anoAtual = hoje.getFullYear();
 
 let agendamentos = {};
+
+function carregarAgendamentosDoBanco() {
+  fetch("https://terrazzo-1.onrender.com/agendamentos")
+    .then(res => res.json())
+    .then(dados => {
+      agendamentos = {}; // zera pra evitar duplicações
+      dados.forEach(item => {
+        const data = new Date(item.dia);
+        const idDia = `${data.getDate()}-${data.getMonth()}-${data.getFullYear()}`;
+
+        if (!agendamentos[idDia]) agendamentos[idDia] = [];
+        agendamentos[idDia].push({
+          nome: item.nome,
+          horario: item.horario,
+          diaTodo: item.dia_todo
+        });
+      });
+
+      criarCalendario(mesAtual, anoAtual);
+    });
+}
 
 function criarCalendario(mes, ano) {
   calendar.innerHTML = "";
@@ -36,16 +53,16 @@ function criarCalendario(mes, ano) {
     let diaTodoMarcado = reservas.some(item => item.diaTodo);
 
     if (qtdReservas >= 2 || diaTodoMarcado) {
-      divDia.classList.add("dia-cheio"); // vermelho
+      divDia.classList.add("dia-cheio");
     } else if (qtdReservas >= 1) {
-      divDia.classList.add("dia-reservado"); // amarelo
+      divDia.classList.add("dia-reservado");
     }
 
     if (!(qtdReservas >= 2 || diaTodoMarcado)) {
       const btnAdd = document.createElement("button");
       btnAdd.className = "btn-plus";
       btnAdd.innerText = "+";
-      btnAdd.onclick = () => abrirFormulario(idDia);
+      btnAdd.onclick = () => abrirFormulario(idDia, dia, mes, ano);
       divDia.appendChild(btnAdd);
     }
 
@@ -60,7 +77,7 @@ function criarCalendario(mes, ano) {
   }
 }
 
-function abrirFormulario(idDia) {
+function abrirFormulario(idDia, dia, mes, ano) {
   const overlay = document.createElement("div");
   overlay.className = "modal-overlay";
 
@@ -71,20 +88,16 @@ function abrirFormulario(idDia) {
     <button class="fechar">X</button>
     <form class="form-inline">
       <input type="text" placeholder="Nome" required />
-
       <div class="hora-bloco">
         <label>Início:</label>
         <input type="time" class="hora-inicio" required />
         <label>Término:</label>
         <input type="time" class="hora-fim" required />
       </div>
-
-<div class="checkbox-wrapper">
-  <input type="checkbox" id="diaTodo" />
-  <span class="texto-dia-todo">Reservar o dia todo</span>
-</div>
-
-      <input type="number" placeholder="Qtd (máx. 6)" min="1" max="6" required />
+      <div class="checkbox-wrapper">
+        <input type="checkbox" id="diaTodo" />
+        <span class="texto-dia-todo">Reservar o dia todo</span>
+      </div>
       <button type="submit">Agendar</button>
     </form>
   `;
@@ -106,23 +119,33 @@ function abrirFormulario(idDia) {
 
   form.onsubmit = (e) => {
     e.preventDefault();
+
     const nome = form.querySelector("input[type='text']").value.trim();
     const inicio = inputInicio.value;
     const termino = inputFim.value;
-    const qtd = parseInt(form.querySelector("input[type='number']").value);
     const diaTodo = checkboxDiaTodo.checked;
 
-    if (!nome || isNaN(qtd) || qtd < 1 || qtd > 6 || (!diaTodo && (inicio >= termino))) {
+    if (!nome || (!diaTodo && (inicio >= termino))) {
       alert("Preencha todos os campos corretamente e verifique os horários.");
       return;
     }
 
     const horario = diaTodo ? "Dia inteiro" : `${inicio} - ${termino}`;
-    if (!agendamentos[idDia]) agendamentos[idDia] = [];
-    agendamentos[idDia].push({ nome, horario, qtd, diaTodo });
+    const dataCompleta = new Date(ano, mes, dia).toISOString().split("T")[0];
 
-    document.body.removeChild(overlay);
-    criarCalendario(mesAtual, anoAtual);
+    fetch("https://terrazzo-1.onrender.com/agendamentos", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        nome,
+        horario,
+        dia: dataCompleta,
+        dia_todo: diaTodo
+      })
+    }).then(() => {
+      document.body.removeChild(overlay);
+      carregarAgendamentosDoBanco();
+    });
   };
 
   overlay.appendChild(modal);
@@ -141,4 +164,4 @@ btnProximo.onclick = () => {
   criarCalendario(mesAtual, anoAtual);
 };
 
-criarCalendario(mesAtual, anoAtual);
+carregarAgendamentosDoBanco();
