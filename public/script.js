@@ -16,11 +16,10 @@ function carregarAgendamentosDoBanco() {
   fetch("https://terrazzo.onrender.com/agendamentos")
     .then(res => res.json())
     .then(dados => {
-      agendamentos = {};
+      agendamentos = {}; // zera pra evitar duplicações
       dados.forEach(item => {
-        // 🔧 Usa a data string pura para evitar erro de fuso
-        const [ano, mes, dia] = item.dia.split("-").map(Number);
-        const idDia = `${dia}-${mes - 1}-${ano}`;
+        const data = new Date(item.dia);
+        const idDia = `${data.getDate()}-${data.getMonth()}-${data.getFullYear()}`;
 
         if (!agendamentos[idDia]) agendamentos[idDia] = [];
         agendamentos[idDia].push({
@@ -53,15 +52,13 @@ function criarCalendario(mes, ano) {
     let qtdReservas = reservas.length;
     let diaTodoMarcado = reservas.some(item => item.diaTodo);
 
-    if (qtdReservas >= 3 || diaTodoMarcado) {
+    if (qtdReservas >= 2 || diaTodoMarcado) {
       divDia.classList.add("dia-cheio");
-    } else if (qtdReservas === 2) {
-      divDia.classList.add("dia-amarelo");
-    } else if (qtdReservas === 1) {
-      divDia.classList.add("dia-verde");
+    } else if (qtdReservas >= 1) {
+      divDia.classList.add("dia-reservado");
     }
 
-    if (qtdReservas < 3 && !diaTodoMarcado) {
+    if (!(qtdReservas >= 2 || diaTodoMarcado)) {
       const btnAdd = document.createElement("button");
       btnAdd.className = "btn-plus";
       btnAdd.innerText = "+";
@@ -134,9 +131,7 @@ function abrirFormulario(idDia, dia, mes, ano) {
     }
 
     const horario = diaTodo ? "Dia inteiro" : `${inicio} - ${termino}`;
-
-    // 🔧 Construir data string estável
-    const dataCompleta = `${ano}-${String(mes + 1).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
+    const dataCompleta = new Date(ano, mes, dia).toISOString().split("T")[0];
 
     fetch("https://terrazzo.onrender.com/agendamentos", {
       method: "POST",
@@ -169,6 +164,6 @@ btnProximo.onclick = () => {
   criarCalendario(mesAtual, anoAtual);
 };
 
-// 🔁 Atualização automática
+// 🔄 Atualização automática a cada 1 segundo
 carregarAgendamentosDoBanco();
 setInterval(carregarAgendamentosDoBanco, 1000);
