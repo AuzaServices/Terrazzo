@@ -17,17 +17,20 @@ function carregarAgendamentosDoBanco() {
     .then(res => res.json())
     .then(dados => {
       agendamentos = {}; // zera pra evitar duplicações
-      dados.forEach(item => {
-        const data = new Date(item.dia);
-        const idDia = `${data.getDate()}-${data.getMonth()}-${data.getFullYear()}`;
+dados.forEach(item => {
+  const partes = item.dia.split("-");
+  if (partes.length === 3) {
+    const [ano, mes, dia] = partes.map(p => parseInt(p, 10));
+    const idDia = `${dia}-${mes - 1}-${ano}`; // agora bate certinho com criarCalendario()
 
-        if (!agendamentos[idDia]) agendamentos[idDia] = [];
-        agendamentos[idDia].push({
-          nome: item.nome,
-          horario: item.horario,
-          diaTodo: item.dia_todo
-        });
-      });
+    if (!agendamentos[idDia]) agendamentos[idDia] = [];
+    agendamentos[idDia].push({
+      nome: item.nome,
+      horario: item.horario,
+      diaTodo: item.dia_todo
+    });
+  }
+});
 
       criarCalendario(mesAtual, anoAtual);
     });
