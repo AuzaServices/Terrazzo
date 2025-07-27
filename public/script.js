@@ -54,10 +54,8 @@ function criarCalendario(mes, ano) {
     let qtdReservas = reservas.length;
     let diaTodoMarcado = reservas.some(item => item.diaTodo);
 
-    // Remove classes anteriores
     divDia.classList.remove("dia-verde", "dia-amarelo", "dia-vermelho");
 
-    // Adiciona cor conforme quantidade
     if (qtdReservas >= 3 || diaTodoMarcado) {
       divDia.classList.add("dia-vermelho");
     } else if (qtdReservas === 2) {
@@ -66,7 +64,6 @@ function criarCalendario(mes, ano) {
       divDia.classList.add("dia-verde");
     }
 
-    // Mostra botão "+" apenas se o dia estiver liberado
     if (qtdReservas < 3 && !diaTodoMarcado) {
       const btnAdd = document.createElement("button");
       btnAdd.className = "btn-plus";
@@ -81,6 +78,16 @@ function criarCalendario(mes, ano) {
       agendado.textContent = `${item.nome} - ${item.horario}`;
       divDia.appendChild(agendado);
     });
+
+    // 🔴 Destaque do dia atual
+    const hoje = new Date();
+    if (
+      dia === hoje.getDate() &&
+      mes === hoje.getMonth() &&
+      ano === hoje.getFullYear()
+    ) {
+      divDia.classList.add("hoje-vermelho");
+    }
 
     calendar.appendChild(divDia);
   }

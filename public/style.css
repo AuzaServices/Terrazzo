@@ -229,8 +229,6 @@ input[type="checkbox"] {
 }
 
 .hoje-vermelho {
-  background-color: red;
-  color: white;
-  font-weight: bold;
-  border-radius: 5px;
+  border: 2px solid #e74c3c;
+  box-shadow: 0 0 5px rgba(231, 76, 60, 0.7);
 }
