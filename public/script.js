@@ -17,24 +17,17 @@ function carregarAgendamentosDoBanco() {
   fetch("https://terrazzo.onrender.com/agendamentos")
     .then(res => res.json())
     .then(dados => {
-      if (!Array.isArray(dados)) {
-        console.error("Resposta inesperada:", dados);
-        return;
-      }
-
       agendamentos = {};
       dados.forEach(item => {
         const partes = item.dia.split("-");
-        if (partes.length === 3) {
-          const [ano, mes, dia] = partes.map(p => parseInt(p, 10));
-          const idDia = `${dia}-${mes - 1}-${ano}`;
-          if (!agendamentos[idDia]) agendamentos[idDia] = [];
-          agendamentos[idDia].push({
-            nome: item.nome,
-            horario: item.horario,
-            diaTodo: item.dia_todo
-          });
-        }
+        const [ano, mes, dia] = partes.map(p => parseInt(p, 10));
+        const idDia = `${dia}-${mes - 1}-${ano}`;
+        if (!agendamentos[idDia]) agendamentos[idDia] = [];
+        agendamentos[idDia].push({
+          nome: item.nome,
+          horario: item.horario,
+          diaTodo: item.dia_todo
+        });
       });
 
       criarCalendario(mesAtual, anoAtual);
@@ -169,7 +162,7 @@ function abrirFormulario(idDia, dia, mes, ano) {
       })
     }).then(() => {
       document.body.removeChild(overlay);
-      carregarAgendamentosDoBanco(); // atualiza após agendamento
+      carregarAgendamentosDoBanco(); // carrega apenas após agendar
     }).catch(err => {
       alert("Erro ao agendar. Tente novamente.");
       console.error(err);
@@ -192,8 +185,6 @@ btnProximo.onclick = () => {
   criarCalendario(mesAtual, anoAtual);
 };
 
-carregarAgendamentosDoBanco(); // Carrega ao abrir
+carregarAgendamentosDoBanco(); // ✅ só carrega ao abrir
 
-setInterval(() => {
-  carregarAgendamentosDoBanco(); // Atualiza a cada 2 segundos
-}, 2000);
+// Removido setInterval — atualização manual somente ao agendar
