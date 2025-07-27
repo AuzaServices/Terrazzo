@@ -17,6 +17,11 @@ function carregarAgendamentosDoBanco() {
   fetch("https://terrazzo.onrender.com/agendamentos")
     .then(res => res.json())
     .then(dados => {
+      if (!Array.isArray(dados)) {
+        console.error("Resposta inesperada:", dados);
+        return;
+      }
+
       agendamentos = {};
       dados.forEach(item => {
         const partes = item.dia.split("-");
@@ -31,8 +36,10 @@ function carregarAgendamentosDoBanco() {
           });
         }
       });
+
       criarCalendario(mesAtual, anoAtual);
-    });
+    })
+    .catch(err => console.error("Erro ao carregar agendamentos:", err));
 }
 
 function criarCalendario(mes, ano) {
@@ -49,7 +56,6 @@ function criarCalendario(mes, ano) {
     const divDia = document.createElement("div");
     divDia.className = "day";
 
-    // Verifica se é o dia atual
     const hoje = new Date();
     const isHoje =
       dia === hoje.getDate() &&
@@ -164,6 +170,9 @@ function abrirFormulario(idDia, dia, mes, ano) {
     }).then(() => {
       document.body.removeChild(overlay);
       carregarAgendamentosDoBanco();
+    }).catch(err => {
+      alert("Erro ao agendar. Tente novamente.");
+      console.error(err);
     });
   };
 
