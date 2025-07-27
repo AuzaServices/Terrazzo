@@ -216,16 +216,11 @@ input[type="checkbox"] {
 }
 
 .dia-verde {
-  background-color: #d4f4dd;
-  border: 2px solid #43a047;
+  background-color: #b2f2bb;
 }
-
 .dia-amarelo {
-  background-color: #fff8c6;
-  border: 2px solid #fbc02d;
+  background-color: #fff3bf;
 }
-
 .dia-vermelho {
-  background-color: #f8d7da;
-  border: 2px solid #d32f2f;
+  background-color: #ffa8a8;
 }

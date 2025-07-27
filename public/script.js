@@ -3,7 +3,8 @@ const mesAtualEl = document.getElementById("mesAtual");
 const btnAnterior = document.getElementById("btnAnterior");
 const btnProximo = document.getElementById("btnProximo");
 
-const nomesMeses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+const nomesMeses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 const diasSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
 let hoje = new Date();
@@ -16,22 +17,20 @@ function carregarAgendamentosDoBanco() {
   fetch("https://terrazzo.onrender.com/agendamentos")
     .then(res => res.json())
     .then(dados => {
-      agendamentos = {}; // zera pra evitar duplicações
-dados.forEach(item => {
-  const partes = item.dia.split("-");
-  if (partes.length === 3) {
-    const [ano, mes, dia] = partes.map(p => parseInt(p, 10));
-    const idDia = `${dia}-${mes - 1}-${ano}`; // agora bate certinho com criarCalendario()
-
-    if (!agendamentos[idDia]) agendamentos[idDia] = [];
-    agendamentos[idDia].push({
-      nome: item.nome,
-      horario: item.horario,
-      diaTodo: item.dia_todo
-    });
-  }
-});
-
+      agendamentos = {};
+      dados.forEach(item => {
+        const partes = item.dia.split("-");
+        if (partes.length === 3) {
+          const [ano, mes, dia] = partes.map(p => parseInt(p, 10));
+          const idDia = `${dia}-${mes - 1}-${ano}`;
+          if (!agendamentos[idDia]) agendamentos[idDia] = [];
+          agendamentos[idDia].push({
+            nome: item.nome,
+            horario: item.horario,
+            diaTodo: item.dia_todo
+          });
+        }
+      });
       criarCalendario(mesAtual, anoAtual);
     });
 }
@@ -55,13 +54,20 @@ function criarCalendario(mes, ano) {
     let qtdReservas = reservas.length;
     let diaTodoMarcado = reservas.some(item => item.diaTodo);
 
-    if (qtdReservas >= 2 || diaTodoMarcado) {
-      divDia.classList.add("dia-cheio");
-    } else if (qtdReservas >= 1) {
-      divDia.classList.add("dia-reservado");
+    // Remove classes anteriores
+    divDia.classList.remove("dia-verde", "dia-amarelo", "dia-vermelho");
+
+    // Adiciona cor conforme quantidade
+    if (qtdReservas >= 3 || diaTodoMarcado) {
+      divDia.classList.add("dia-vermelho");
+    } else if (qtdReservas === 2) {
+      divDia.classList.add("dia-amarelo");
+    } else if (qtdReservas === 1) {
+      divDia.classList.add("dia-verde");
     }
 
-    if (!(qtdReservas >= 2 || diaTodoMarcado)) {
+    // Mostra botão "+" apenas se o dia estiver liberado
+    if (qtdReservas < 3 && !diaTodoMarcado) {
       const btnAdd = document.createElement("button");
       btnAdd.className = "btn-plus";
       btnAdd.innerText = "+";
@@ -167,6 +173,5 @@ btnProximo.onclick = () => {
   criarCalendario(mesAtual, anoAtual);
 };
 
-// 🔄 Atualização automática a cada 1 segundo
 carregarAgendamentosDoBanco();
 setInterval(carregarAgendamentosDoBanco, 1000);
