@@ -10,13 +10,17 @@ const diasSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 let hoje = new Date();
 let mesAtual = hoje.getMonth();
 let anoAtual = hoje.getFullYear();
-
 let agendamentos = {};
 
 function carregarAgendamentosDoBanco() {
   fetch("https://terrazzo.onrender.com/agendamentos")
     .then(res => res.json())
     .then(dados => {
+      if (!Array.isArray(dados)) {
+        console.error("Resposta inválida do servidor:", dados);
+        return;
+      }
+
       agendamentos = {};
       dados.forEach(item => {
         const partes = item.dia.split("-");
