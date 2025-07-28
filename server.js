@@ -44,7 +44,7 @@ app.post("/agendamentos", (req, res) => {
     return res.status(400).json({ erro: "Campos obrigatórios ausentes." });
   }
 
-  const diaTodoFormatado = dia_todo ? 1 : 0; // ✅ Correção aqui!
+  const diaTodoFormatado = dia_todo ? 1 : 0;
 
   const query = `
     INSERT INTO agendamentos (nome, horario, dia, dia_todo)
@@ -65,14 +65,14 @@ app.post("/agendamentos", (req, res) => {
 app.get("/agendamentos", (req, res) => {
   conexao.query("SELECT * FROM agendamentos", (err, resultados) => {
     if (err) {
-      console.error("🚨 ERRO NA QUERY:", err.message);
-      return res.status(500).json({ erro: err.message });
+      console.error("🚨 ERRO NA QUERY:", err); // log mais completo
+      return res.status(500).json({ erro: "Erro ao buscar agendamentos." });
     }
     res.json(resultados);
   });
 });
 
 // Inicializa o servidor
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
 });
