@@ -44,12 +44,14 @@ app.post("/agendamentos", (req, res) => {
     return res.status(400).json({ erro: "Campos obrigatórios ausentes." });
   }
 
+  const diaTodoFormatado = dia_todo ? 1 : 0; // ✅ Correção aqui!
+
   const query = `
     INSERT INTO agendamentos (nome, horario, dia, dia_todo)
     VALUES (?, ?, ?, ?)
   `;
 
-  conexao.query(query, [nome, horario, dia, !!dia_todo], (err, resultado) => {
+  conexao.query(query, [nome, horario, dia, diaTodoFormatado], (err, resultado) => {
     if (err) {
       console.error("❌ Erro ao salvar agendamento:", err);
       return res.status(500).json({ erro: "Erro interno ao salvar agendamento." });
