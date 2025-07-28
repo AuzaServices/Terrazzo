@@ -180,7 +180,7 @@ function abrirFormulario(idDia, dia, mes, ano) {
       })
       .then(() => {
         document.body.removeChild(overlay);
-        carregarAgendamentosDoBanco();
+        carregarAgendamentosDoBanco(); // Atualiza após agendamento
       })
       .catch(err => {
         alert("Erro ao agendar. Tente novamente.");
@@ -195,19 +195,14 @@ function abrirFormulario(idDia, dia, mes, ano) {
 btnAnterior.onclick = () => {
   mesAtual = (mesAtual === 0) ? 11 : mesAtual - 1;
   anoAtual = (mesAtual === 11) ? anoAtual - 1 : anoAtual;
-  criarCalendario(mesAtual, anoAtual);
+  carregarAgendamentosDoBanco();
 };
 
 btnProximo.onclick = () => {
   mesAtual = (mesAtual === 11) ? 0 : mesAtual + 1;
   anoAtual = (mesAtual === 0) ? anoAtual + 1 : anoAtual;
-  criarCalendario(mesAtual, anoAtual);
+  carregarAgendamentosDoBanco();
 };
 
 // ⏳ Carrega ao abrir
 carregarAgendamentosDoBanco();
-
-// 🔁 Atualiza o calendário a cada 5 segundos
-setInterval(() => {
-  carregarAgendamentosDoBanco();
-}, 5000);
