@@ -1,19 +1,20 @@
-// server.js
-
 const express = require("express");
 const mysql = require("mysql2");
 const cors = require("cors");
 const path = require("path");
+const http = require("http"); // novo
+const socketIO = require("socket.io"); // novo
 
 const app = express();
+const server = http.createServer(app); // novo
+const io = socketIO(server); // novo
+
 const PORT = process.env.PORT || 3000;
 
-// Middlewares
 app.use(cors());
 app.use(express.json());
-app.use(express.static("public")); // Serve os arquivos do front-end
+app.use(express.static("public"));
 
-// Pool de conexões com MySQL
 const pool = mysql.createPool({
   host: "sql10.freesqldatabase.com",
   user: "sql10792206",
@@ -25,12 +26,10 @@ const pool = mysql.createPool({
   queueLimit: 0
 });
 
-// Rota principal - carrega a página do calendário
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// Rota para cadastrar agendamentos
 app.post("/agendamentos", (req, res) => {
   const { nome, horario, dia, dia_todo } = req.body;
 
@@ -52,10 +51,12 @@ app.post("/agendamentos", (req, res) => {
     }
 
     res.json({ sucesso: true, id: resultado.insertId });
+
+    // Emitir evento para todos os clientes conectados
+    io.emit("atualizar");
   });
 });
 
-// Rota para listar todos os agendamentos
 app.get("/agendamentos", (req, res) => {
   pool.query("SELECT * FROM agendamentos", (err, resultados) => {
     if (err) {
@@ -66,7 +67,16 @@ app.get("/agendamentos", (req, res) => {
   });
 });
 
-// Inicializa o servidor
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
+// WebSocket: quando o cliente se conecta
+io.on("connection", (socket) => {
+  console.log("📡 Novo cliente conectado");
+
+  socket.on("disconnect", () => {
+    console.log("👋 Cliente desconectado");
+  });
+});
+
+// Inicializa o servidor com WebSocket
+server.listen(PORT, "0.0.0.0", () => {
+  console.log(`🚀 Servidor com WebSocket rodando em http://localhost:${PORT}`);
 });

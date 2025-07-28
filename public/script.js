@@ -180,7 +180,7 @@ function abrirFormulario(idDia, dia, mes, ano) {
       })
       .then(() => {
         document.body.removeChild(overlay);
-        carregarAgendamentosDoBanco(); // Atualiza após agendamento
+        // Aqui o Socket.IO já atualiza todos via "atualizar"
       })
       .catch(err => {
         alert("Erro ao agendar. Tente novamente.");
@@ -206,3 +206,12 @@ btnProximo.onclick = () => {
 
 // ⏳ Carrega ao abrir
 carregarAgendamentosDoBanco();
+
+// 🔌 Conecta ao servidor WebSocket
+const socket = io("https://terrazzo.onrender.com");
+
+// 🔄 Escuta evento e atualiza agendamentos em tempo real
+socket.on("atualizar", () => {
+  console.log("📡 Evento recebido: atualizar");
+  carregarAgendamentosDoBanco();
+});
