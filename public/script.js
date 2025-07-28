@@ -12,12 +12,10 @@ let mesAtual = hoje.getMonth();
 let anoAtual = hoje.getFullYear();
 let agendamentos = {};
 
-function carregarAgendamentosDoBanco() {
+function carregarAgendamentosDoBanco(tentativas = 0) {
   fetch("https://terrazzo.onrender.com/agendamentos")
     .then(res => {
-      if (!res.ok) {
-        throw new Error(`Servidor respondeu com erro ${res.status}`);
-      }
+      if (!res.ok) throw new Error(`Servidor respondeu com erro ${res.status}`);
       return res.json();
     })
     .then(dados => {
@@ -43,6 +41,12 @@ function carregarAgendamentosDoBanco() {
     })
     .catch(err => {
       console.error("⚠️ Erro ao carregar agendamentos:", err.message);
+
+      if (tentativas < 3) {
+        setTimeout(() => carregarAgendamentosDoBanco(tentativas + 1), 2000);
+      } else {
+        calendar.innerHTML = `<p class="erro-calendario">🚫 Erro ao carregar agendamentos. Tente atualizar a página.</p>`;
+      }
     });
 }
 
