@@ -219,7 +219,3 @@ socket.on("atualizar", () => {
   console.log("📡 Evento recebido: atualizar");
   carregarAgendamentosDoBanco();
 });
-
-setInterval(() => {
-  carregarAgendamentosDoBanco();
-}, 2000);
