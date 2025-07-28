@@ -65,8 +65,8 @@ app.post("/agendamentos", (req, res) => {
 app.get("/agendamentos", (req, res) => {
   conexao.query("SELECT * FROM agendamentos", (err, resultados) => {
     if (err) {
-      console.error("🚨 ERRO NA QUERY:", err); // log mais completo
-      return res.status(500).json({ erro: "Erro ao buscar agendamentos." });
+      console.error("🚨 ERRO NA QUERY:", err.message);  // << isso aqui!
+      return res.status(500).json({ erro: err.message });
     }
     res.json(resultados);
   });
