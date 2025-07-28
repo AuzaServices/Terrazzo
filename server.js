@@ -63,8 +63,7 @@ app.post("/agendamentos", (req, res) => {
 app.get("/agendamentos", (req, res) => {
   conexao.query("SELECT * FROM agendamentos", (err, resultados) => {
     if (err) {
-      console.error("❌ Erro ao buscar agendamentos:", err);
-      // Retorna um array vazio para não quebrar o front-end
+      console.error("Erro MySQL:", err.sqlMessage || err.message);
       return res.status(500).json([]);
     }
 
