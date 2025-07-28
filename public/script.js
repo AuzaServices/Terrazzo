@@ -14,7 +14,12 @@ let agendamentos = {};
 
 function carregarAgendamentosDoBanco() {
   fetch("https://terrazzo.onrender.com/agendamentos")
-    .then(res => res.json())
+    .then(res => {
+      if (!res.ok) {
+        throw new Error(`Servidor respondeu com erro ${res.status}`);
+      }
+      return res.json();
+    })
     .then(dados => {
       if (!Array.isArray(dados)) {
         console.error("Resposta inválida do servidor:", dados);
@@ -36,7 +41,9 @@ function carregarAgendamentosDoBanco() {
 
       criarCalendario(mesAtual, anoAtual);
     })
-    .catch(err => console.error("Erro ao carregar agendamentos:", err));
+    .catch(err => {
+      console.error("⚠️ Erro ao carregar agendamentos:", err.message);
+    });
 }
 
 function criarCalendario(mes, ano) {
@@ -164,13 +171,21 @@ function abrirFormulario(idDia, dia, mes, ano) {
         dia: dataCompleta,
         dia_todo: diaTodo
       })
-    }).then(() => {
-      document.body.removeChild(overlay);
-      carregarAgendamentosDoBanco();
-    }).catch(err => {
-      alert("Erro ao agendar. Tente novamente.");
-      console.error(err);
-    });
+    })
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`Erro ${res.status} ao enviar agendamento`);
+        }
+        return res.json();
+      })
+      .then(() => {
+        document.body.removeChild(overlay);
+        carregarAgendamentosDoBanco();
+      })
+      .catch(err => {
+        alert("Erro ao agendar. Tente novamente.");
+        console.error("⚠️ Falha no envio:", err.message);
+      });
   };
 
   overlay.appendChild(modal);
