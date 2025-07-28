@@ -13,21 +13,16 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static("public")); // Serve os arquivos do front-end
 
-// Conexão com MySQL
-const conexao = mysql.createConnection({
+// Pool de conexões com MySQL
+const pool = mysql.createPool({
   host: "sql10.freesqldatabase.com",
   user: "sql10792206",
   password: "hKT4bm2WIP",
   database: "sql10792206",
-  port: 3306
-});
-
-conexao.connect((err) => {
-  if (err) {
-    console.error("❌ Erro ao conectar ao MySQL:", err);
-  } else {
-    console.log("✅ Conectado ao MySQL com sucesso!");
-  }
+  port: 3306,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
 });
 
 // Rota principal - carrega a página do calendário
@@ -39,7 +34,6 @@ app.get("/", (req, res) => {
 app.post("/agendamentos", (req, res) => {
   const { nome, horario, dia, dia_todo } = req.body;
 
-  // Validação básica
   if (!nome || !horario || !dia) {
     return res.status(400).json({ erro: "Campos obrigatórios ausentes." });
   }
@@ -51,10 +45,10 @@ app.post("/agendamentos", (req, res) => {
     VALUES (?, ?, ?, ?)
   `;
 
-  conexao.query(query, [nome, horario, dia, diaTodoFormatado], (err, resultado) => {
+  pool.query(query, [nome, horario, dia, diaTodoFormatado], (err, resultado) => {
     if (err) {
-      console.error("❌ Erro ao salvar agendamento:", err);
-      return res.status(500).json({ erro: "Erro interno ao salvar agendamento." });
+      console.error("❌ Erro ao salvar agendamento:", err.message);
+      return res.status(500).json({ erro: err.message });
     }
 
     res.json({ sucesso: true, id: resultado.insertId });
@@ -63,9 +57,9 @@ app.post("/agendamentos", (req, res) => {
 
 // Rota para listar todos os agendamentos
 app.get("/agendamentos", (req, res) => {
-  conexao.query("SELECT * FROM agendamentos", (err, resultados) => {
+  pool.query("SELECT * FROM agendamentos", (err, resultados) => {
     if (err) {
-      console.error("🚨 ERRO NA QUERY:", err.message);  // << isso aqui!
+      console.error("🚨 ERRO NA QUERY:", err.message);
       return res.status(500).json({ erro: err.message });
     }
     res.json(resultados);
