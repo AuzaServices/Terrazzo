@@ -12,12 +12,10 @@ let mesAtual = hoje.getMonth();
 let anoAtual = hoje.getFullYear();
 let agendamentos = {};
 
-// 🔍 Calcula segundo domingo de um mês
 function segundoDomingo(mes, ano) {
-  let dia = 1;
-  let contador = 0;
+  let dia = 1, contador = 0;
   while (dia <= 14) {
-    const data = new Date(ano, mes, dia);
+    let data = new Date(ano, mes, dia);
     if (data.getDay() === 0) contador++;
     if (contador === 2) return dia;
     dia++;
@@ -25,15 +23,14 @@ function segundoDomingo(mes, ano) {
   return null;
 }
 
-// 🔒 Retorna lista de feriados bloqueados do próximo ano
-function feriadosBloqueados(proximoAno) {
+function feriadosBloqueados(ano) {
   return [
     { dia: 24, mes: 11 }, // Natal véspera
     { dia: 25, mes: 11 }, // Natal
     { dia: 31, mes: 11 }, // Réveillon
     { dia: 12, mes: 9 },  // Dia das Crianças
-    { dia: segundoDomingo(4, proximoAno), mes: 4 }, // Dia das Mães
-    { dia: segundoDomingo(7, proximoAno), mes: 7 }, // Dia dos Pais
+    { dia: segundoDomingo(4, ano), mes: 4 }, // Dia das Mães
+    { dia: segundoDomingo(7, ano), mes: 7 }  // Dia dos Pais
   ].filter(f => f.dia !== null);
 }
 
@@ -44,15 +41,9 @@ function carregarAgendamentosDoBanco(tentativas = 0) {
       return res.json();
     })
     .then(dados => {
-      if (!Array.isArray(dados)) {
-        console.error("Resposta inválida do servidor:", dados);
-        return;
-      }
-
       agendamentos = {};
       dados.forEach(item => {
-        const partes = item.dia.split("-");
-        const [ano, mes, dia] = partes.map(p => parseInt(p, 10));
+        const [ano, mes, dia] = item.dia.split("-").map(n => parseInt(n, 10));
         const idDia = `${dia}-${mes - 1}-${ano}`;
         if (!agendamentos[idDia]) agendamentos[idDia] = [];
         agendamentos[idDia].push({
@@ -61,7 +52,6 @@ function carregarAgendamentosDoBanco(tentativas = 0) {
           diaTodo: item.dia_todo
         });
       });
-
       criarCalendario(mesAtual, anoAtual);
     })
     .catch(err => {
@@ -77,34 +67,29 @@ function carregarAgendamentosDoBanco(tentativas = 0) {
 function criarCalendario(mes, ano) {
   calendar.innerHTML = "";
   mesAtualEl.textContent = `${nomesMeses[mes]} ${ano}`;
-
   const diasNoMes = new Date(ano, mes + 1, 0).getDate();
+  const feriados = feriadosBloqueados(hoje.getFullYear() + 1);
 
   for (let dia = 1; dia <= diasNoMes; dia++) {
     const dataDia = new Date(ano, mes, dia);
     const diaSemana = diasSemana[dataDia.getDay()];
     const idDia = `${dia}-${mes}-${ano}`;
-
     const divDia = document.createElement("div");
     divDia.className = "day";
 
-    const hoje = new Date();
     const isHoje =
       dia === hoje.getDate() &&
       mes === hoje.getMonth() &&
       ano === hoje.getFullYear();
 
-    const classeHoje = isHoje ? "hoje-vermelho" : "";
-
     divDia.innerHTML = `
-      <h3 class="${classeHoje}">${dia}</h3>
+      <h3 class="${isHoje ? "hoje-vermelho" : ""}">${dia}</h3>
       <p class="dia-sem">${diaSemana}</p>
     `;
 
-    let reservas = agendamentos[idDia] || [];
-    let qtdReservas = reservas.length;
-    let diaTodoMarcado = reservas.some(item => item.diaTodo);
-
+    const reservas = agendamentos[idDia] || [];
+    const qtdReservas = reservas.length;
+    const diaTodoMarcado = reservas.some(item => item.diaTodo);
     divDia.classList.remove("dia-verde", "dia-amarelo", "dia-vermelho");
 
     if (qtdReservas >= 3 || diaTodoMarcado) {
@@ -115,7 +100,10 @@ function criarCalendario(mes, ano) {
       divDia.classList.add("dia-verde");
     }
 
-    if (qtdReservas < 3 && !diaTodoMarcado) {
+    const bloqueado = feriados.some(f => f.dia === dia && f.mes === mes && ano === hoje.getFullYear() + 1)
+      && hoje < new Date(hoje.getFullYear() + 1, 0, 1);
+
+    if (qtdReservas < 3 && !diaTodoMarcado && !bloqueado) {
       const btnAdd = document.createElement("button");
       btnAdd.className = "btn-plus";
       btnAdd.innerText = "+";
@@ -135,14 +123,12 @@ function criarCalendario(mes, ano) {
 }
 
 function abrirFormulario(idDia, dia, mes, ano) {
-  const hoje = new Date();
-  const proximoAno = hoje.getFullYear() + 1;
+  const anoHoje = hoje.getFullYear();
+  const bloqueados = feriadosBloqueados(anoHoje + 1);
+  const isFeriado = bloqueados.some(f => f.dia === dia && f.mes === mes && ano === anoHoje + 1);
 
-  const feriados = feriadosBloqueados(proximoAno);
-  const isFeriadoBloqueado = feriados.some(f => f.dia === dia && f.mes === mes && ano === proximoAno);
-
-  if (isFeriadoBloqueado && hoje.getFullYear() < proximoAno) {
-    alert("🚫 Este feriado especial só poderá ser reservado a partir de 1º de Janeiro do ano correspondente, para garantir justiça a todos.");
+  if (isFeriado && hoje < new Date(anoHoje + 1, 0, 1)) {
+    alert("🚫 Esse feriado do ano seguinte só poderá ser reservado após o dia 1º de Janeiro para garantir justiça a todos.");
     return;
   }
 
@@ -204,23 +190,15 @@ function abrirFormulario(idDia, dia, mes, ano) {
     fetch("https://terrazzo.onrender.com/agendamentos", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        nome,
-        horario,
-        dia: dataCompleta,
-        dia_todo: diaTodo
-      })
+      body: JSON.stringify({ nome, horario, dia: dataCompleta, dia_todo: diaTodo })
     })
       .then(res => {
-        if (!res.ok) {
-          throw new Error(`Erro ${res.status} ao enviar agendamento`);
-        }
+        if (!res.ok) throw new Error(`Erro ${res.status} ao enviar agendamento`);
         return res.json();
       })
       .then(() => {
         document.body.removeChild(overlay);
-        // Socket.IO atualiza todos
-        socket.emit("atualizar"); // Notifica servidor após novo agendamento
+        socket.emit("atualizar"); // 🔔 Notifica servidor para atualizar todos
       })
       .catch(err => {
         alert("Erro ao agendar. Tente novamente.");
@@ -244,13 +222,13 @@ btnProximo.onclick = () => {
   carregarAgendamentosDoBanco();
 };
 
-// ⏳ Carrega ao abrir
+// ⏳ Carregamento inicial
 carregarAgendamentosDoBanco();
 
 // 🔌 Conecta ao servidor WebSocket
 const socket = io("https://terrazzo.onrender.com");
 
-// 🔄 Escuta evento e atualiza agendamentos em tempo real
+// 🔄 Escuta evento para atualizar em tempo real
 socket.on("atualizar", () => {
   console.log("📡 Evento recebido: atualizar");
   carregarAgendamentosDoBanco();
