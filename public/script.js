@@ -12,6 +12,31 @@ let mesAtual = hoje.getMonth();
 let anoAtual = hoje.getFullYear();
 let agendamentos = {};
 
+// 🔍 Calcula segundo domingo de um mês
+function segundoDomingo(mes, ano) {
+  let dia = 1;
+  let contador = 0;
+  while (dia <= 14) {
+    const data = new Date(ano, mes, dia);
+    if (data.getDay() === 0) contador++;
+    if (contador === 2) return dia;
+    dia++;
+  }
+  return null;
+}
+
+// 🔒 Retorna lista de feriados bloqueados do próximo ano
+function feriadosBloqueados(proximoAno) {
+  return [
+    { dia: 24, mes: 11 }, // Natal véspera
+    { dia: 25, mes: 11 }, // Natal
+    { dia: 31, mes: 11 }, // Réveillon
+    { dia: 12, mes: 9 },  // Dia das Crianças
+    { dia: segundoDomingo(4, proximoAno), mes: 4 }, // Dia das Mães
+    { dia: segundoDomingo(7, proximoAno), mes: 7 }, // Dia dos Pais
+  ].filter(f => f.dia !== null);
+}
+
 function carregarAgendamentosDoBanco(tentativas = 0) {
   fetch("https://terrazzo.onrender.com/agendamentos")
     .then(res => {
@@ -41,7 +66,6 @@ function carregarAgendamentosDoBanco(tentativas = 0) {
     })
     .catch(err => {
       console.error("⚠️ Erro ao carregar agendamentos:", err.message);
-
       if (tentativas < 3) {
         setTimeout(() => carregarAgendamentosDoBanco(tentativas + 1), 2000);
       } else {
@@ -111,6 +135,17 @@ function criarCalendario(mes, ano) {
 }
 
 function abrirFormulario(idDia, dia, mes, ano) {
+  const hoje = new Date();
+  const proximoAno = hoje.getFullYear() + 1;
+
+  const feriados = feriadosBloqueados(proximoAno);
+  const isFeriadoBloqueado = feriados.some(f => f.dia === dia && f.mes === mes && ano === proximoAno);
+
+  if (isFeriadoBloqueado && hoje.getFullYear() < proximoAno) {
+    alert("🚫 Este feriado especial só poderá ser reservado a partir de 1º de Janeiro do ano correspondente, para garantir justiça a todos.");
+    return;
+  }
+
   const overlay = document.createElement("div");
   overlay.className = "modal-overlay";
 
@@ -184,7 +219,8 @@ function abrirFormulario(idDia, dia, mes, ano) {
       })
       .then(() => {
         document.body.removeChild(overlay);
-        // Aqui o Socket.IO já atualiza todos via "atualizar"
+        // Socket.IO atualiza todos
+        socket.emit("atualizar"); // Notifica servidor após novo agendamento
       })
       .catch(err => {
         alert("Erro ao agendar. Tente novamente.");
