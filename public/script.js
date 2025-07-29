@@ -100,8 +100,8 @@ function criarCalendario(mes, ano) {
       divDia.classList.add("dia-verde");
     }
 
-    const bloqueado = feriados.some(f => f.dia === dia && f.mes === mes && ano === hoje.getFullYear() + 1)
-      && hoje < new Date(hoje.getFullYear() + 1, 0, 1);
+const feriadosDoAno = feriadosBloqueados(ano);
+const bloqueado = feriadosDoAno.some(f => f.dia === dia && f.mes === mes) && hoje < new Date(ano, 0, 1);
 
     if (qtdReservas < 3 && !diaTodoMarcado && !bloqueado) {
       const btnAdd = document.createElement("button");
@@ -123,11 +123,11 @@ function criarCalendario(mes, ano) {
 }
 
 function abrirFormulario(idDia, dia, mes, ano) {
-  const anoHoje = hoje.getFullYear();
-  const bloqueados = feriadosBloqueados(anoHoje + 1);
-  const isFeriado = bloqueados.some(f => f.dia === dia && f.mes === mes && ano === anoHoje + 1);
+const bloqueados = feriadosBloqueados(ano);
+const isFeriado = bloqueados.some(f => f.dia === dia && f.mes === mes);
 
-  if (isFeriado && hoje < new Date(anoHoje + 1, 0, 1)) {
+const dataLimite = new Date(ano, 0, 1); // 01/01 do ano da data
+if (isFeriado && hoje < dataLimite) {
     alert("🚫 Esse feriado do ano seguinte só poderá ser reservado após o dia 1º de Janeiro para garantir justiça a todos.");
     return;
   }
