@@ -365,3 +365,9 @@ estiloExtra.textContent = `
   }
 `;
 document.head.appendChild(estiloExtra);
+
+// 🔁 Atualização automática do calendário a cada 5 segundos
+setInterval(() => {
+  console.log("🔄 Atualizando calendário automaticamente...");
+  carregarAgendamentosDoBanco();
+}, 2000);
