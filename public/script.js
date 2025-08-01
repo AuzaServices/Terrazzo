@@ -234,7 +234,7 @@ function aplicarStatusDia(idDia, status) {
     aviso.className = "status-dia";
     aviso.textContent = status === "manutencao"
       ? "Em Manutenção"
-      : "Bloqueado Temporariamente";
+      : "Indisponível Hoje";
     diaEl.appendChild(aviso);
   }
 }
