@@ -11,6 +11,7 @@ let hoje = new Date();
 let mesAtual = hoje.getMonth();
 let anoAtual = hoje.getFullYear();
 let agendamentos = {};
+let statusDias = {};
 
 function segundoDomingo(mes, ano) {
   let dia = 1, contador = 0;
@@ -33,8 +34,6 @@ function feriadosBloqueados(ano) {
     { dia: segundoDomingo(7, ano), mes: 7 }
   ].filter(f => f.dia !== null);
 }
-
-let statusDias = {};
 
 function carregarAgendamentosDoBanco(tentativas = 0) {
   Promise.all([
@@ -77,9 +76,9 @@ function criarCalendario(mes, ano) {
   const feriados = feriadosBloqueados(hoje.getFullYear() + 1);
 
   for (let dia = 1; dia <= diasNoMes; dia++) {
+    const idDia = `${dia}-${mes}-${ano}`;
     const dataDia = new Date(ano, mes, dia);
     const diaSemana = diasSemana[dataDia.getDay()];
-    const idDia = `${dia}-${mes}-${ano}`;
     const divDia = document.createElement("div");
     divDia.className = "day";
 
@@ -134,19 +133,19 @@ function criarCalendario(mes, ano) {
     divDia.addEventListener("mouseup", () => clearTimeout(pressTimer));
     divDia.addEventListener("mouseleave", () => clearTimeout(pressTimer));
 
+    // 🔴 Aplicar status visual
+    if (statusDias[idDia]) {
+      divDia.classList.add("dia-vermelho-borda");
+      const aviso = document.createElement("div");
+      aviso.className = "status-dia";
+      aviso.textContent = statusDias[idDia] === "manutencao"
+        ? "🛠️ Em Manutenção"
+        : "🚫 Bloqueado Temporariamente";
+      divDia.appendChild(aviso);
+    }
+
     calendar.appendChild(divDia);
   }
-
-if (statusDias[idDia]) {
-  divDia.classList.add("dia-vermelho-borda");
-  const aviso = document.createElement("div");
-  aviso.className = "status-dia";
-  aviso.textContent = statusDias[idDia] === "manutencao"
-    ? "🛠️ Em Manutenção"
-    : "🚫 Bloqueado Temporariamente";
-  divDia.appendChild(aviso);
-}
-
 }
 
 function abrirModalSenha(dia, mes, ano) {
@@ -196,26 +195,11 @@ function abrirModalStatus(dia, mes, ano) {
     if (!status) return alert("Selecione uma opção.");
 
     const idDia = `${dia}-${mes}-${ano}`;
-    const diaFormatado = `${ano}-${mes + 1}-${dia}`; // formato YYYY-MM-DD
+    const diaFormatado = `${ano}-${mes + 1}-${dia}`;
 
-    // 🔄 Envia status via WebSocket
     socket.emit("status-dia", { dia: diaFormatado, status });
-
     aplicarStatusDia(idDia, status);
     document.body.removeChild(overlay);
-  };
-
-  overlay.appendChild(modal);
-  document.body.appendChild(overlay);
-
-  modal.querySelector("button").onclick = () => {
-    const status = modal.querySelector("select").value;
-    if (!status) return alert("Selecione uma opção.");
-
-    const idDia = `${dia}-${mes}-${ano}`;
-    aplicarStatusDia(idDia, status);
-    document.body.removeChild(overlay);
-    socket.emit("atualizar");
   };
 
   overlay.appendChild(modal);
@@ -229,9 +213,16 @@ function aplicarStatusDia(idDia, status) {
 
   if (diaEl) {
     diaEl.classList.add("dia-vermelho-borda");
+
+    // Remove status anterior se já existir
+    const statusAntigo = diaEl.querySelector(".status-dia");
+    if (statusAntigo) statusAntigo.remove();
+
     const aviso = document.createElement("div");
     aviso.className = "status-dia";
-    aviso.textContent = status === "manutencao" ? "🛠️ Em Manutenção" : "🚫 Bloqueado Temporariamente";
+    aviso.textContent = status === "manutencao"
+      ? "🛠️ Em Manutenção"
+      : "🚫 Bloqueado Temporariamente";
     diaEl.appendChild(aviso);
   }
 }
@@ -239,7 +230,7 @@ function aplicarStatusDia(idDia, status) {
 function abrirFormulario(idDia, dia, mes, ano) {
   const bloqueados = feriadosBloqueados(ano);
   const isFeriado = bloqueados.some(f => f.dia === dia && f.mes === mes);
-  const dataLimite = new Date(ano, 0, 1); // 01/01 do ano da data
+  const dataLimite = new Date(ano, 0, 1);
 
   if (isFeriado && hoje < dataLimite) {
     alert("🚫 Esse feriado do ano seguinte só poderá ser reservado após o dia 1º de Janeiro para garantir justiça a todos.");
@@ -312,7 +303,7 @@ function abrirFormulario(idDia, dia, mes, ano) {
       })
       .then(() => {
         document.body.removeChild(overlay);
-        socket.emit("atualizar"); // 🔔 Notifica servidor para atualizar todos
+        socket.emit("atualizar");
       })
       .catch(err => {
         alert("Erro ao agendar. Tente novamente.");
