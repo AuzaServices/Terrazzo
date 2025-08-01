@@ -149,8 +149,8 @@ divDia.addEventListener("touchcancel", cancelarPress);
       const aviso = document.createElement("div");
       aviso.className = "status-dia";
       aviso.textContent = statusDias[idDia] === "manutencao"
-        ? "🛠️ Em Manutenção"
-        : "🚫 Bloqueado Temporariamente";
+        ? "Em Manutenção"
+        : "Bloqueado Temporariamente";
       divDia.appendChild(aviso);
     }
 
