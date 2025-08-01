@@ -361,7 +361,7 @@ estiloExtra.textContent = `
     margin-top: 5px;
     font-weight: bold;
     color: #818181ff;
-    text-align: center;
+    text-align: left;
   }
 `;
 document.head.appendChild(estiloExtra);
