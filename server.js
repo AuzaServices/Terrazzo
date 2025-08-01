@@ -30,6 +30,7 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
+// 📅 Buscar agendamentos
 app.get("/agendamentos", (req, res) => {
   pool.query("SELECT * FROM agendamentos", (err, resultados) => {
     if (err) {
@@ -40,6 +41,7 @@ app.get("/agendamentos", (req, res) => {
   });
 });
 
+// ➕ Criar agendamento
 app.post("/agendamentos", (req, res) => {
   const { nome, horario, dia, dia_todo } = req.body;
 
@@ -61,12 +63,11 @@ app.post("/agendamentos", (req, res) => {
     }
 
     res.json({ sucesso: true, id: resultado.insertId });
-
-    // 🔄 Emitir evento para todos os clientes conectados
-    io.emit("atualizar");
+    io.emit("atualizar"); // 🔄 Atualiza todos os clientes
   });
 });
 
+// ❌ Excluir agendamento
 app.delete("/agendamentos/:id", (req, res) => {
   const idAgendamento = req.params.id;
   const query = "DELETE FROM agendamentos WHERE id = ?";
@@ -82,20 +83,53 @@ app.delete("/agendamentos/:id", (req, res) => {
     }
 
     res.json({ sucesso: true, mensagem: "Agendamento removido com sucesso." });
-
-    // 🔄 Emitir evento para atualizar clientes
-    io.emit("atualizar");
+    io.emit("atualizar"); // 🔄 Atualiza todos os clientes
   });
 });
 
+// 📥 Carregar status dos dias
+app.get("/status-dia", (req, res) => {
+  pool.query("SELECT dia, status FROM status_dias", (err, resultados) => {
+    if (err) {
+      console.error("❌ Erro ao buscar status:", err.message);
+      return res.status(500).json({ erro: err.message });
+    }
+
+    res.json(resultados);
+  });
+});
+
+// 📡 WebSocket
 io.on("connection", (socket) => {
   console.log("📡 Novo cliente conectado");
+
+  // 🔐 Receber status-dia via WebSocket e salvar no banco
+  socket.on("status-dia", ({ dia, status }) => {
+    if (!dia || !status) return;
+
+    const query = `
+      INSERT INTO status_dias (dia, status)
+      VALUES (?, ?)
+      ON DUPLICATE KEY UPDATE status = VALUES(status)
+    `;
+
+    pool.query(query, [dia, status], (err) => {
+      if (err) {
+        console.error("❌ Erro ao salvar status via WebSocket:", err.message);
+        return;
+      }
+
+      console.log(`✅ Status salvo para ${dia}: ${status}`);
+      io.emit("atualizar"); // 🔄 Atualiza todos os clientes
+    });
+  });
 
   socket.on("disconnect", () => {
     console.log("👋 Cliente desconectado");
   });
 });
 
+// 🚀 Iniciar servidor
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Servidor com WebSocket rodando em http://localhost:${PORT}`);
 });

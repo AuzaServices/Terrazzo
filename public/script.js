@@ -34,15 +34,18 @@ function feriadosBloqueados(ano) {
   ].filter(f => f.dia !== null);
 }
 
+let statusDias = {};
+
 function carregarAgendamentosDoBanco(tentativas = 0) {
-  fetch("https://terrazzo-6lae.onrender.com/agendamentos")
-    .then(res => {
-      if (!res.ok) throw new Error(`Servidor respondeu com erro ${res.status}`);
-      return res.json();
-    })
-    .then(dados => {
+  Promise.all([
+    fetch("https://terrazzo-6lae.onrender.com/agendamentos").then(res => res.json()),
+    fetch("https://terrazzo-6lae.onrender.com/status-dia").then(res => res.json())
+  ])
+    .then(([agendamentosData, statusData]) => {
       agendamentos = {};
-      dados.forEach(item => {
+      statusDias = {};
+
+      agendamentosData.forEach(item => {
         const [ano, mes, dia] = item.dia.split("-").map(n => parseInt(n, 10));
         const idDia = `${dia}-${mes - 1}-${ano}`;
         if (!agendamentos[idDia]) agendamentos[idDia] = [];
@@ -52,15 +55,18 @@ function carregarAgendamentosDoBanco(tentativas = 0) {
           diaTodo: item.dia_todo
         });
       });
+
+      statusData.forEach(item => {
+        const [ano, mes, dia] = item.dia.split("-").map(n => parseInt(n, 10));
+        const idDia = `${dia}-${mes - 1}-${ano}`;
+        statusDias[idDia] = item.status;
+      });
+
       criarCalendario(mesAtual, anoAtual);
     })
     .catch(err => {
-      console.error("⚠️ Erro ao carregar agendamentos:", err.message);
-      if (tentativas < 3) {
-        setTimeout(() => carregarAgendamentosDoBanco(tentativas + 1), 2000);
-      } else {
-        calendar.innerHTML = `<p class="erro-calendario">🚫 Erro ao carregar agendamentos. Tente atualizar a página.</p>`;
-      }
+      console.error("Erro ao carregar dados:", err.message);
+      calendar.innerHTML = `<p class="erro-calendario">🚫 Erro ao carregar dados. Tente atualizar a página.</p>`;
     });
 }
 
@@ -130,6 +136,17 @@ function criarCalendario(mes, ano) {
 
     calendar.appendChild(divDia);
   }
+
+if (statusDias[idDia]) {
+  divDia.classList.add("dia-vermelho-borda");
+  const aviso = document.createElement("div");
+  aviso.className = "status-dia";
+  aviso.textContent = statusDias[idDia] === "manutencao"
+    ? "🛠️ Em Manutenção"
+    : "🚫 Bloqueado Temporariamente";
+  divDia.appendChild(aviso);
+}
+
 }
 
 function abrirModalSenha(dia, mes, ano) {
@@ -173,6 +190,23 @@ function abrirModalStatus(dia, mes, ano) {
     </select>
     <button>Aplicar</button>
   `;
+
+  modal.querySelector("button").onclick = () => {
+    const status = modal.querySelector("select").value;
+    if (!status) return alert("Selecione uma opção.");
+
+    const idDia = `${dia}-${mes}-${ano}`;
+    const diaFormatado = `${ano}-${mes + 1}-${dia}`; // formato YYYY-MM-DD
+
+    // 🔄 Envia status via WebSocket
+    socket.emit("status-dia", { dia: diaFormatado, status });
+
+    aplicarStatusDia(idDia, status);
+    document.body.removeChild(overlay);
+  };
+
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
 
   modal.querySelector("button").onclick = () => {
     const status = modal.querySelector("select").value;
