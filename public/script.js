@@ -152,7 +152,7 @@ divDia.addEventListener("touchcancel", cancelarPress);
       aviso.className = "status-dia";
       aviso.textContent = statusDias[idDia] === "manutencao"
         ? "Em Manutenção"
-        : "Bloqueado Temporariamente";
+        : "Indisponivel Hoje";
       divDia.appendChild(aviso);
     }
 
