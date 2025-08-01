@@ -124,14 +124,24 @@ function criarCalendario(mes, ano) {
     });
 
     // 👇 Clique longo para abrir modal de senha
-    let pressTimer;
-    divDia.addEventListener("mousedown", () => {
-      pressTimer = setTimeout(() => {
-        abrirModalSenha(dia, mes, ano);
-      }, 5000);
-    });
-    divDia.addEventListener("mouseup", () => clearTimeout(pressTimer));
-    divDia.addEventListener("mouseleave", () => clearTimeout(pressTimer));
+let pressTimer;
+
+const iniciarPress = () => {
+  pressTimer = setTimeout(() => {
+    abrirModalSenha(dia, mes, ano);
+  }, 5000);
+};
+
+const cancelarPress = () => clearTimeout(pressTimer);
+
+divDia.addEventListener("mousedown", iniciarPress);
+divDia.addEventListener("mouseup", cancelarPress);
+divDia.addEventListener("mouseleave", cancelarPress);
+
+// 👇 Suporte para celular
+divDia.addEventListener("touchstart", iniciarPress);
+divDia.addEventListener("touchend", cancelarPress);
+divDia.addEventListener("touchcancel", cancelarPress);
 
     // 🔴 Aplicar status visual
     if (statusDias[idDia]) {
