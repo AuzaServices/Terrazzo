@@ -165,7 +165,7 @@ function abrirModalSenha(dia, mes, ano) {
   const modal = document.createElement("div");
   modal.className = "modal-content";
   modal.innerHTML = `
-    <h3>🔐 Acesso restrito</h3>
+    <h3>Acesso restrito</h3>
     <input type="password" placeholder="Digite a senha" />
     <button>Entrar</button>
   `;
@@ -176,7 +176,7 @@ function abrirModalSenha(dia, mes, ano) {
       document.body.removeChild(overlay);
       abrirModalStatus(dia, mes, ano);
     } else {
-      alert("❌ Senha incorreta.");
+      alert("Senha incorreta.");
     }
   };
 
@@ -231,8 +231,8 @@ function aplicarStatusDia(idDia, status) {
     const aviso = document.createElement("div");
     aviso.className = "status-dia";
     aviso.textContent = status === "manutencao"
-      ? "🛠️ Em Manutenção"
-      : "🚫 Bloqueado Temporariamente";
+      ? "Em Manutenção"
+      : "Bloqueado Temporariamente";
     diaEl.appendChild(aviso);
   }
 }
@@ -353,7 +353,7 @@ socket.on("atualizar", () => {
 const estiloExtra = document.createElement("style");
 estiloExtra.textContent = `
   .dia-vermelho-borda {
-    border-left-color: #be1505ff;
+    border-left-color: #818181ff;
   }
   .status-dia {
     margin-top: 5px;

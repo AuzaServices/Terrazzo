@@ -155,12 +155,12 @@ main {
 
 /* Verde para 1 reserva */
 .dia-verde {
-  border-left-color: #2ecc71;
+  border-left-color: #2e85cc;
 }
 
 /* Amarelo para 2 reservas */
 .dia-amarelo {
-  border-left-color: #366dda;
+  border-left-color: #de8f40;
 }
 
 /* Vermelho para 3+ reservas ou dia inteiro */
