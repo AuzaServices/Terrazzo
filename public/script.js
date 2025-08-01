@@ -197,7 +197,7 @@ function abrirModalStatus(dia, mes, ano) {
     <select>
       <option value="">-- Escolha uma opção --</option>
       <option value="manutencao">Espaço em Manutenção</option>
-      <option value="bloqueado">Espaço Bloqueado Temporariamente</option>
+      <option value="bloqueado">Indisponível Hoje</option>
     </select>
     <button>Aplicar</button>
   `;
