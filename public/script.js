@@ -35,7 +35,7 @@ function feriadosBloqueados(ano) {
 }
 
 function carregarAgendamentosDoBanco(tentativas = 0) {
-  fetch("https://terrazzo.onrender.com/agendamentos")
+  fetch("https://terrazzo-6lae.onrender.com/agendamentos")
     .then(res => {
       if (!res.ok) throw new Error(`Servidor respondeu com erro ${res.status}`);
       return res.json();
@@ -187,7 +187,7 @@ if (isFeriado && hoje < dataLimite) {
     const horario = diaTodo ? "Dia inteiro" : `${inicio} - ${termino}`;
     const dataCompleta = new Date(ano, mes, dia).toISOString().split("T")[0];
 
-    fetch("https://terrazzo.onrender.com/agendamentos", {
+    fetch("https://terrazzo-6lae.onrender.com/agendamentos", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ nome, horario, dia: dataCompleta, dia_todo: diaTodo })
@@ -226,7 +226,7 @@ btnProximo.onclick = () => {
 carregarAgendamentosDoBanco();
 
 // 🔌 Conecta ao servidor WebSocket
-const socket = io("https://terrazzo.onrender.com");
+const socket = io("https://terrazzo-6lae.onrender.com");
 
 // 🔄 Escuta evento para atualizar em tempo real
 socket.on("atualizar", () => {
