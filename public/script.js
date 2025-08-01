@@ -193,7 +193,7 @@ function abrirModalStatus(dia, mes, ano) {
   const modal = document.createElement("div");
   modal.className = "modal-content";
   modal.innerHTML = `
-    <h3>⚠️ Selecionar status do espaço</h3>
+    <h3>Selecionar status do espaço</h3>
     <select>
       <option value="">-- Escolha uma opção --</option>
       <option value="manutencao">Espaço em Manutenção</option>
@@ -360,7 +360,7 @@ estiloExtra.textContent = `
   .status-dia {
     margin-top: 5px;
     font-weight: bold;
-    color: red;
+    color: #818181ff;
     text-align: center;
   }
 `;
