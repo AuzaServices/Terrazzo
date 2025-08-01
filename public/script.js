@@ -353,7 +353,7 @@ socket.on("atualizar", () => {
 const estiloExtra = document.createElement("style");
 estiloExtra.textContent = `
   .dia-vermelho-borda {
-    border: 3px solid red;
+    border-left-color: #be1505ff;
   }
   .status-dia {
     margin-top: 5px;

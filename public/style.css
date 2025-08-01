@@ -160,12 +160,12 @@ main {
 
 /* Amarelo para 2 reservas */
 .dia-amarelo {
-  border-left-color: #f1c40f;
+  border-left-color: #366dda;
 }
 
 /* Vermelho para 3+ reservas ou dia inteiro */
 .dia-vermelho {
-  border-left-color: #e74c3c;
+  border-left-color: #c88315;
 }
 
 .btn-plus {
