@@ -255,6 +255,7 @@ input[type="checkbox"] {
 #btnProximo {
   background: none;
   border: none;
+  margin-top: -5px;
   font-size: 1.5rem;
   cursor: pointer;
   color: var(--azul);
