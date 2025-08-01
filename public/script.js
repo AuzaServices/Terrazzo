@@ -25,12 +25,12 @@ function segundoDomingo(mes, ano) {
 
 function feriadosBloqueados(ano) {
   return [
-    { dia: 24, mes: 11 }, // Natal véspera
-    { dia: 25, mes: 11 }, // Natal
-    { dia: 31, mes: 11 }, // Réveillon
-    { dia: 12, mes: 9 },  // Dia das Crianças
-    { dia: segundoDomingo(4, ano), mes: 4 }, // Dia das Mães
-    { dia: segundoDomingo(7, ano), mes: 7 }  // Dia dos Pais
+    { dia: 24, mes: 11 },
+    { dia: 25, mes: 11 },
+    { dia: 31, mes: 11 },
+    { dia: 12, mes: 9 },
+    { dia: segundoDomingo(4, ano), mes: 4 },
+    { dia: segundoDomingo(7, ano), mes: 7 }
   ].filter(f => f.dia !== null);
 }
 
@@ -100,8 +100,8 @@ function criarCalendario(mes, ano) {
       divDia.classList.add("dia-verde");
     }
 
-const feriadosDoAno = feriadosBloqueados(ano);
-const bloqueado = feriadosDoAno.some(f => f.dia === dia && f.mes === mes) && hoje < new Date(ano, 0, 1);
+    const feriadosDoAno = feriadosBloqueados(ano);
+    const bloqueado = feriadosDoAno.some(f => f.dia === dia && f.mes === mes) && hoje < new Date(ano, 0, 1);
 
     if (qtdReservas < 3 && !diaTodoMarcado && !bloqueado) {
       const btnAdd = document.createElement("button");
@@ -118,16 +118,96 @@ const bloqueado = feriadosDoAno.some(f => f.dia === dia && f.mes === mes) && hoj
       divDia.appendChild(agendado);
     });
 
+    // 👇 Clique longo para abrir modal de senha
+    let pressTimer;
+    divDia.addEventListener("mousedown", () => {
+      pressTimer = setTimeout(() => {
+        abrirModalSenha(dia, mes, ano);
+      }, 5000);
+    });
+    divDia.addEventListener("mouseup", () => clearTimeout(pressTimer));
+    divDia.addEventListener("mouseleave", () => clearTimeout(pressTimer));
+
     calendar.appendChild(divDia);
   }
 }
 
-function abrirFormulario(idDia, dia, mes, ano) {
-const bloqueados = feriadosBloqueados(ano);
-const isFeriado = bloqueados.some(f => f.dia === dia && f.mes === mes);
+function abrirModalSenha(dia, mes, ano) {
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
 
-const dataLimite = new Date(ano, 0, 1); // 01/01 do ano da data
-if (isFeriado && hoje < dataLimite) {
+  const modal = document.createElement("div");
+  modal.className = "modal-content";
+  modal.innerHTML = `
+    <h3>🔐 Acesso restrito</h3>
+    <input type="password" placeholder="Digite a senha" />
+    <button>Entrar</button>
+  `;
+
+  modal.querySelector("button").onclick = () => {
+    const senha = modal.querySelector("input").value;
+    if (senha === "terrazzo125") {
+      document.body.removeChild(overlay);
+      abrirModalStatus(dia, mes, ano);
+    } else {
+      alert("❌ Senha incorreta.");
+    }
+  };
+
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+}
+
+function abrirModalStatus(dia, mes, ano) {
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+
+  const modal = document.createElement("div");
+  modal.className = "modal-content";
+  modal.innerHTML = `
+    <h3>⚠️ Selecionar status do espaço</h3>
+    <select>
+      <option value="">-- Escolha uma opção --</option>
+      <option value="manutencao">Espaço em Manutenção</option>
+      <option value="bloqueado">Espaço Bloqueado Temporariamente</option>
+    </select>
+    <button>Aplicar</button>
+  `;
+
+  modal.querySelector("button").onclick = () => {
+    const status = modal.querySelector("select").value;
+    if (!status) return alert("Selecione uma opção.");
+
+    const idDia = `${dia}-${mes}-${ano}`;
+    aplicarStatusDia(idDia, status);
+    document.body.removeChild(overlay);
+    socket.emit("atualizar");
+  };
+
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+}
+
+function aplicarStatusDia(idDia, status) {
+  const diaEl = [...document.querySelectorAll(".day")].find(el =>
+    el.querySelector("h3")?.textContent == idDia.split("-")[0]
+  );
+
+  if (diaEl) {
+    diaEl.classList.add("dia-vermelho-borda");
+    const aviso = document.createElement("div");
+    aviso.className = "status-dia";
+    aviso.textContent = status === "manutencao" ? "🛠️ Em Manutenção" : "🚫 Bloqueado Temporariamente";
+    diaEl.appendChild(aviso);
+  }
+}
+
+function abrirFormulario(idDia, dia, mes, ano) {
+  const bloqueados = feriadosBloqueados(ano);
+  const isFeriado = bloqueados.some(f => f.dia === dia && f.mes === mes);
+  const dataLimite = new Date(ano, 0, 1); // 01/01 do ano da data
+
+  if (isFeriado && hoje < dataLimite) {
     alert("🚫 Esse feriado do ano seguinte só poderá ser reservado após o dia 1º de Janeiro para garantir justiça a todos.");
     return;
   }
@@ -233,3 +313,18 @@ socket.on("atualizar", () => {
   console.log("📡 Evento recebido: atualizar");
   carregarAgendamentosDoBanco();
 });
+
+// 🧾 CSS extra para borda vermelha e status
+const estiloExtra = document.createElement("style");
+estiloExtra.textContent = `
+  .dia-vermelho-borda {
+    border: 3px solid red;
+  }
+  .status-dia {
+    margin-top: 5px;
+    font-weight: bold;
+    color: red;
+    text-align: center;
+  }
+`;
+document.head.appendChild(estiloExtra);
