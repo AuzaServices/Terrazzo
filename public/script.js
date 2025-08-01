@@ -108,13 +108,15 @@ function criarCalendario(mes, ano) {
     const feriadosDoAno = feriadosBloqueados(ano);
     const bloqueado = feriadosDoAno.some(f => f.dia === dia && f.mes === mes) && hoje < new Date(ano, 0, 1);
 
-    if (qtdReservas < 3 && !diaTodoMarcado && !bloqueado) {
-      const btnAdd = document.createElement("button");
-      btnAdd.className = "btn-plus";
-      btnAdd.innerText = "+";
-      btnAdd.onclick = () => abrirFormulario(idDia, dia, mes, ano);
-      divDia.appendChild(btnAdd);
-    }
+const temStatusBloqueante = statusDias[idDia] === "manutencao" || statusDias[idDia] === "bloqueado";
+
+if (qtdReservas < 3 && !diaTodoMarcado && !bloqueado && !temStatusBloqueante) {
+  const btnAdd = document.createElement("button");
+  btnAdd.className = "btn-plus";
+  btnAdd.innerText = "+";
+  btnAdd.onclick = () => abrirFormulario(idDia, dia, mes, ano);
+  divDia.appendChild(btnAdd);
+}
 
     reservas.forEach(item => {
       const agendado = document.createElement("div");
