@@ -272,10 +272,69 @@ input[type="checkbox"] {
 #formComercio input,
 #formComercio textarea {
   display: block;
-  margin-bottom: 10px;
   width: 100%;
-  padding: 8px;
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  border: 1px solid #ccc;
+  border-radius: 12px;
   font-size: 14px;
+  transition: border-color 0.3s ease;
+}
+
+#formComercio input:focus,
+#formComercio textarea:focus {
+  border-color: #00481b;
+  outline: none;
+}
+
+/* Botão principal */
+#formComercio button[type="submit"] {
+  background-color: #00481b;
+  color: white;
+  border: none;
+  border-radius: 30px;
+  padding: 10px 20px;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+#formComercio {
+  max-width: 400px; /* ou 360px se quiser mais estreito */
+  margin: 0 auto;
+}
+
+#formComercio input,
+#formComercio textarea {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+
+#formComercio button[type="submit"]:hover {
+  background-color: #00481b;
+  transform: scale(1.05);
+}
+
+/* Botões de upload de imagem */
+#formComercio input[type="file"] {
+  border: none;
+  background-color: #f0f0f0;
+  padding: 10px;
+  border-radius: 20px;
+  font-size: 13px;
+  cursor: pointer;
+  margin-bottom: 12px;
+}
+
+/* Aviso de erro */
+#erroTelefone {
+  color: red;
+  font-size: 13px;
+  margin-top: -8px;
+  margin-bottom: 10px;
+  display: none;
 }
 
 /* Container dos cards */

@@ -69,6 +69,38 @@
     <button type="submit">Adicionar</button>
   </form>
 
+  <script>
+  const telefoneInput = document.querySelector('input[name="telefone"]');
+  const erroTelefone = document.createElement('span');
+  erroTelefone.id = "erroTelefone";
+  telefoneInput.insertAdjacentElement("afterend", erroTelefone);
+
+  telefoneInput.addEventListener("input", function () {
+    let valor = telefoneInput.value.replace(/\D/g, "");
+
+    if (valor.length > 11) valor = valor.slice(0, 11);
+
+    if (valor.length >= 2) {
+      valor = `(${valor.slice(0, 2)})${valor.slice(2)}`;
+    }
+
+    if (valor.length >= 9) {
+      valor = `${valor.slice(0, 9)}-${valor.slice(9)}`;
+    }
+
+    telefoneInput.value = valor;
+
+    // Validação
+    if (valor.length < 14) {
+      erroTelefone.textContent = "Número inválido. Use o formato (99)99999-9999";
+      erroTelefone.style.display = "block";
+    } else {
+      erroTelefone.textContent = "";
+      erroTelefone.style.display = "none";
+    }
+  });
+</script>
+
   <!-- Lista de negócios cadastrados -->
   <div id="listaComercios">
     <h3>Negócios Cadastrados</h3>
