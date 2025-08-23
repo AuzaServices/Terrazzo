@@ -358,7 +358,7 @@ input[type="checkbox"] {
 }
 
 #btnMostrarFormulario {
-  background-color: #0077ff; /* 💙 cor vibrante, pode trocar por outra */
+  background-color: #00481b; /* 💙 cor vibrante, pode trocar por outra */
   color: white;
   border: none;
   border-radius: 50px;
@@ -371,6 +371,6 @@ input[type="checkbox"] {
 }
 
 #btnMostrarFormulario:hover {
-  background-color: #005fcc;
+  background-color: #01712c;
   transform: scale(1.05);
 }
