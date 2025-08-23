@@ -99,6 +99,22 @@
       erroTelefone.style.display = "none";
     }
   });
+
+    const apartamentoInput = document.querySelector('input[name="apartamento"]');
+
+apartamentoInput.addEventListener("input", () => {
+  apartamentoInput.value = apartamentoInput.value.replace(/\D/g, "").slice(0, 3);
+
+    const campoTexto = document.querySelector('input[name="campoTexto"]');
+
+  campoTexto.addEventListener("input", () => {
+    if (campoTexto.value.length > 27) {
+      campoTexto.value = campoTexto.value.slice(0, 27);
+    }
+  });
+
+});
+
 </script>
 
   <!-- Lista de negócios cadastrados -->
