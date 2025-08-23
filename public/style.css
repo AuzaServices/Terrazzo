@@ -262,11 +262,13 @@ input[type="checkbox"] {
   font-weight: bold;
 }
 
+/* Área principal */
 #comercios {
   padding: 20px;
   background: #f9f9f9;
 }
 
+/* Formulário */
 #formComercio input,
 #formComercio textarea {
   display: block;
@@ -275,6 +277,7 @@ input[type="checkbox"] {
   padding: 8px;
 }
 
+/* Container dos cards */
 .comercios-container {
   display: flex;
   flex-direction: row;
@@ -283,8 +286,19 @@ input[type="checkbox"] {
   padding: 10px;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
+  min-width: 100%;
 }
 
+.comercios-container::-webkit-scrollbar {
+  height: 6px;
+}
+
+.comercios-container::-webkit-scrollbar-thumb {
+  background-color: #ccc;
+  border-radius: 3px;
+}
+
+/* Responsivo para telas maiores */
 @media (min-width: 768px) {
   .comercios-container {
     justify-content: center;
@@ -293,6 +307,7 @@ input[type="checkbox"] {
   }
 }
 
+/* Card de comércio */
 .comercio-card {
   position: relative;
   min-width: 280px;
@@ -300,11 +315,17 @@ input[type="checkbox"] {
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  padding: 16px;
+  padding: 16px 64px 16px 16px; /* espaço para a logo */
   scroll-snap-align: start;
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
+.comercio-card:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Logo do comércio */
 .logo-comercio {
   position: absolute;
   top: 12px;
@@ -316,6 +337,7 @@ input[type="checkbox"] {
   box-shadow: 0 2px 6px rgba(0,0,0,0.2);
 }
 
+/* Botão do WhatsApp */
 .btn-whatsapp {
   display: inline-block;
   margin-top: 10px;
@@ -332,6 +354,7 @@ input[type="checkbox"] {
   background-color: #1ebe5d;
 }
 
+/* Fotos das mercadorias */
 .fotos-mercadorias {
   display: flex;
   gap: 6px;
@@ -344,8 +367,13 @@ input[type="checkbox"] {
   max-height: 80px;
 }
 
+/* Botão flutuante para mostrar formulário */
 #btnMostrarFormulario {
-  background-color: #00481b; /* 💙 cor vibrante, pode trocar por outra */
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1000;
+  background-color: #00481b;
   color: white;
   border: none;
   border-radius: 50px;
