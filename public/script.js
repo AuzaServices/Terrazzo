@@ -424,7 +424,10 @@ document.addEventListener("DOMContentLoaded", () => {
           <h4>${comercio.nomeNegocio}</h4>
           <p><strong>Tipo:</strong> ${comercio.tipoNegocio}</p>
           <p><strong>Descrição:</strong> ${comercio.descricao}</p>
-          <p><strong>Contato:</strong> ${comercio.nomeMorador} (${comercio.telefone})</p>
+          <p><strong>Contato:</strong> ${comercio.nomeMorador}</p>
+<a class="btn-whatsapp" href="https://wa.me/55${comercio.telefone.replace(/\D/g, '')}" target="_blank">
+  Chamar no Whats
+</a>
           <p><strong>Local:</strong> Bloco ${comercio.bloco}, Ap ${comercio.apartamento}</p>
           ${comercio.logoUrl ? `<img src="${comercio.logoUrl}" alt="Logo" style="max-width:100px;">` : ""}
           ${comercio.fotos && comercio.fotos.length > 0 ? `

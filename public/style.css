@@ -287,3 +287,61 @@ input[type="checkbox"] {
   width: 300px;
   background: white;
 }
+
+.comercios-container {
+  display: flex;
+  overflow-x: auto;
+  gap: 20px;
+  padding: 10px;
+  scroll-snap-type: x mandatory;
+}
+
+.comercio-card {
+  min-width: 280px;
+  flex: 0 0 auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  padding: 16px;
+  scroll-snap-align: start;
+  transition: transform 0.3s ease;
+}
+
+.comercio-card:hover {
+  transform: scale(1.02);
+}
+
+.comercio-card img {
+  border-radius: 8px;
+  margin-top: 8px;
+  max-width: 100%;
+  height: auto;
+}
+
+.fotos-mercadorias {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  overflow-x: auto;
+}
+
+.fotos-mercadorias img {
+  border-radius: 6px;
+  max-height: 80px;
+}
+
+.btn-whatsapp {
+  display: inline-block;
+  margin-top: 10px;
+  background-color: #25D366;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+}
+
+.btn-whatsapp:hover {
+  background-color: #1ebe5d;
+}
