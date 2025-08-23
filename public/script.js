@@ -391,7 +391,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const formData = new FormData(formComercio);
 
     try {
-      const response = await fetch("/api/comercios", {
+      const response = await fetch("/comercios", {
         method: "POST",
         body: formData,
       });
@@ -411,7 +411,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Carrega negócios cadastrados
   async function carregarComercios() {
     try {
-      const response = await fetch("/api/comercios");
+      const response = await fetch("/comercios");
       const comercios = await response.json();
 
       listaContainer.innerHTML = "";
