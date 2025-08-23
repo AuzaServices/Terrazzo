@@ -275,48 +275,28 @@ input[type="checkbox"] {
   margin-bottom: 10px;
   width: 100%;
   padding: 8px;
+  font-size: 14px;
 }
 
 /* Container dos cards */
 .comercios-container {
   display: flex;
-  flex-direction: row;
-  overflow-x: auto;
-  gap: 20px;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
   padding: 10px;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-  min-width: 100%;
-}
-
-.comercios-container::-webkit-scrollbar {
-  height: 6px;
-}
-
-.comercios-container::-webkit-scrollbar-thumb {
-  background-color: #ccc;
-  border-radius: 3px;
-}
-
-/* Responsivo para telas maiores */
-@media (min-width: 768px) {
-  .comercios-container {
-    justify-content: center;
-    flex-wrap: wrap;
-    overflow-x: visible;
-  }
 }
 
 /* Card de comércio */
 .comercio-card {
   position: relative;
-  min-width: 280px;
-  flex: 0 0 auto;
+  width: 260px;
   background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  padding: 16px 64px 16px 16px; /* espaço para a logo */
-  scroll-snap-align: start;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  padding: 12px 16px 12px 16px;
+  font-size: 14px;
+  line-height: 1.3;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -325,13 +305,25 @@ input[type="checkbox"] {
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
+.comercio-card h4 {
+  margin: 0 0 6px 0;
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+}
+
+.comercio-card p {
+  margin: 2px 0;
+  color: #555;
+}
+
 /* Logo do comércio */
 .logo-comercio {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 48px;
-  height: 48px;
+  top: 10px;
+  right: 10px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   object-fit: cover;
   box-shadow: 0 2px 6px rgba(0,0,0,0.2);
@@ -340,13 +332,14 @@ input[type="checkbox"] {
 /* Botão do WhatsApp */
 .btn-whatsapp {
   display: inline-block;
-  margin-top: 10px;
+  margin-top: 8px;
   background-color: #25D366;
   color: white;
-  padding: 8px 12px;
-  border-radius: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
   text-decoration: none;
   font-weight: bold;
+  font-size: 13px;
   transition: background-color 0.3s ease;
 }
 
@@ -358,34 +351,34 @@ input[type="checkbox"] {
 .fotos-mercadorias {
   display: flex;
   gap: 6px;
-  margin-top: 10px;
+  margin-top: 8px;
   overflow-x: auto;
 }
 
 .fotos-mercadorias img {
-  border-radius: 6px;
-  max-height: 80px;
+  border-radius: 4px;
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
 }
 
-/* Botão flutuante para mostrar formulário */
+/* Removido botão flutuante */
 #btnMostrarFormulario {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  z-index: 1000;
   background-color: #00481b;
   color: white;
   border: none;
   border-radius: 50px;
-  padding: 12px 24px;
-  font-size: 16px;
+  padding: 10px 20px;
+  font-size: 15px;
   font-weight: bold;
   cursor: pointer;
   transition: background-color 0.3s ease, transform 0.2s ease;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  position: static; /* ❌ remove flutuante */
 }
 
 #btnMostrarFormulario:hover {
   background-color: #01712c;
-  transform: scale(1.05);
+  transform: scale(1.03);
 }

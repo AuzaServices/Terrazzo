@@ -378,14 +378,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const listaContainer = document.querySelector(".comercios-container");
 
   // Alterna visibilidade do formulário
-  btnMostrarFormulario.addEventListener("click", () => {
+  btnMostrarFormulario?.addEventListener("click", () => {
     const visivel = formComercio.style.display === "block";
     formComercio.style.display = visivel ? "none" : "block";
-    btnMostrarFormulario.textContent = visivel ? "Adicionar Negócio" : "Fechar Formulário";
   });
 
   // Envia dados do formulário
-  formComercio.addEventListener("submit", async (e) => {
+  formComercio?.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const formData = new FormData(formComercio);
@@ -400,7 +399,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       formComercio.reset();
       formComercio.style.display = "none";
-      btnMostrarFormulario.textContent = "Adicionar Negócio";
       carregarComercios(); // Atualiza lista
     } catch (error) {
       alert("Falha ao cadastrar negócio. Tente novamente.");
@@ -417,30 +415,27 @@ document.addEventListener("DOMContentLoaded", () => {
       listaContainer.innerHTML = "";
 
       comercios.forEach((comercio) => {
-const card = document.createElement("div");
-card.className = "comercio-card";
+        const card = document.createElement("div");
+        card.className = "comercio-card";
 
-card.innerHTML = `
-  ${comercio.logoUrl ? `<img class="logo-comercio" src="${comercio.logoUrl}" alt="Logo do comércio">` : ""}
-  
-  <h4>${comercio.nomeNegocio}</h4>
-  <p><strong>Tipo:</strong> ${comercio.tipoNegocio}</p>
-  <p><strong>Descrição:</strong> ${comercio.descricao}</p>
-  <p><strong>Morador:</strong> ${comercio.nomeMorador}</p>
-  <p><strong>Local:</strong> Bloco ${comercio.bloco}, Ap ${comercio.apartamento}</p>
+        card.innerHTML = `
+          ${comercio.logoUrl ? `<img class="logo-comercio" src="${comercio.logoUrl}" alt="Logo do comércio">` : ""}
+          <h4>${comercio.nomeNegocio}</h4>
+          <p><strong>Tipo:</strong> ${comercio.tipoNegocio}</p>
+          <p><strong>Descrição:</strong> ${comercio.descricao}</p>
+          <p><strong>Morador:</strong> ${comercio.nomeMorador}</p>
+          <p><strong>Local:</strong> Bloco ${comercio.bloco}, Ap ${comercio.apartamento}</p>
+          <a class="btn-whatsapp" href="https://wa.me/55${comercio.telefone.replace(/\D/g, '')}" target="_blank">
+            Chamar no Whats
+          </a>
+          ${comercio.fotos?.length ? `
+            <div class="fotos-mercadorias">
+              ${comercio.fotos.map(foto => `<img src="${foto}" alt="Mercadoria">`).join("")}
+            </div>
+          ` : ""}
+        `;
 
-  <a class="btn-whatsapp" href="https://wa.me/55${comercio.telefone.replace(/\D/g, '')}" target="_blank">
-    Chamar no Whats
-  </a>
-
-  ${comercio.fotos && comercio.fotos.length > 0 ? `
-    <div class="fotos-mercadorias">
-      ${comercio.fotos.map(foto => `<img src="${foto}" alt="Mercadoria">`).join("")}
-    </div>
-  ` : ""}
-`;
-
-listaContainer.appendChild(card);
+        listaContainer.appendChild(card);
       });
     } catch (error) {
       console.error("Erro ao carregar negócios:", error);
