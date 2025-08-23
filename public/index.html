@@ -42,6 +42,39 @@
 
       </ul>
     </section>
+    <section id="comercios">
+  <h2>Comércios dos Moradores</h2>
+
+  <!-- Botão para mostrar o formulário -->
+  <button id="btnMostrarFormulario">Adicionar Comércio</button>
+
+  <!-- Formulário escondido inicialmente -->
+  <form id="formComercio" enctype="multipart/form-data" style="display: none;">
+    <h3>Adicionar seu Comércio</h3>
+
+    <input type="text" name="bloco" placeholder="Bloco" required />
+    <input type="text" name="apartamento" placeholder="Apartamento" required />
+    <input type="text" name="nomeMorador" placeholder="Seu Nome" required />
+    <input type="tel" name="telefone" placeholder="Telefone" required />
+    <input type="text" name="nomeNegocio" placeholder="Nome do Negócio" required />
+    <input type="text" name="tipoNegocio" placeholder="Tipo de Negócio" required />
+    <textarea name="descricao" placeholder="Descrição do negócio" required></textarea>
+
+    <label>Logo do Negócio (opcional):</label>
+    <input type="file" name="logo" accept="image/*" />
+
+    <label>Fotos de Mercadorias (opcional):</label>
+    <input type="file" name="fotos[]" accept="image/*" multiple />
+
+    <button type="submit">Adicionar Negócio</button>
+  </form>
+
+  <!-- Lista de negócios cadastrados -->
+  <div id="listaComercios">
+    <h3>Negócios Cadastrados</h3>
+    <div class="comercios-container"></div>
+  </div>
+</section>
   </main>
 
   <!-- Scripts necessários -->
