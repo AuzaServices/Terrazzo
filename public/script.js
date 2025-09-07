@@ -1,1 +1,272 @@
-const calendar=document.getElementById("calendar"),mesAtualEl=document.getElementById("mesAtual"),btnAnterior=document.getElementById("btnAnterior"),btnProximo=document.getElementById("btnProximo"),nomesMeses=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"],diasSemana=["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];let hoje=new Date,mesAtual=hoje.getMonth(),anoAtual=hoje.getFullYear(),agendamentos={},statusDias={};function segundoDomingo(e,o){let t=1,a=0;for(;t<=14;){if(0===new Date(o,e,t).getDay()&&a++,2===a)return t;t++}return null}function feriadosBloqueados(e){return[{dia:24,mes:11},{dia:25,mes:11},{dia:31,mes:11},{dia:12,mes:9},{dia:segundoDomingo(4,e),mes:4},{dia:segundoDomingo(7,e),mes:7}].filter((e=>null!==e.dia))}function carregarAgendamentosDoBanco(e=0){Promise.all([fetch("https://terrazzo-6lae.onrender.com/agendamentos").then((e=>e.json())),fetch("https://terrazzo-6lae.onrender.com/status-dia").then((e=>e.json()))]).then((([e,o])=>{agendamentos={},statusDias={},e.forEach((e=>{const[o,t,a]=e.dia.split("-").map((e=>parseInt(e,10))),n=`${a}-${t-1}-${o}`;agendamentos[n]||(agendamentos[n]=[]),agendamentos[n].push({nome:e.nome,horario:e.horario,diaTodo:e.dia_todo})})),o.forEach((e=>{const[o,t,a]=e.dia.split("-").map((e=>parseInt(e,10)));statusDias[`${a}-${t-1}-${o}`]=e.status})),criarCalendario(mesAtual,anoAtual)})).catch((e=>{console.error("Erro ao carregar dados:",e.message),calendar.innerHTML='<p class="erro-calendario">🚫 Erro ao carregar dados. Tente atualizar a página.</p>'}))}function criarCalendario(e,o){calendar.innerHTML="",mesAtualEl.textContent=`${nomesMeses[e]} ${o}`;const t=new Date(o,e+1,0).getDate();feriadosBloqueados(hoje.getFullYear()+1);for(let a=1;a<=t;a++){const t=`${a}-${e}-${o}`,n=new Date(o,e,a),r=diasSemana[n.getDay()],s=document.createElement("div");s.className="day";const i=a===hoje.getDate()&&e===hoje.getMonth()&&o===hoje.getFullYear();s.innerHTML=`\n      <h3 class="${i?"hoje-vermelho":""}">${a}</h3>\n      <p class="dia-sem">${r}</p>\n    `;const c=agendamentos[t]||[],d=c.length,l=c.some((e=>e.diaTodo));s.classList.remove("dia-verde","dia-amarelo","dia-vermelho"),d>=3||l?s.classList.add("dia-vermelho"):2===d?s.classList.add("dia-amarelo"):1===d&&s.classList.add("dia-verde");const m=feriadosBloqueados(o).some((o=>o.dia===a&&o.mes===e))&&hoje<new Date(o,0,1),u="manutencao"===statusDias[t]||"bloqueado"===statusDias[t];if(d<3&&!l&&!m&&!u){const n=document.createElement("button");n.className="btn-plus",n.innerText="+",n.onclick=()=>abrirFormulario(t,a,e,o),s.appendChild(n)}let p;c.forEach((e=>{const o=document.createElement("div");o.className="agendado",o.textContent=`${e.nome} - ${e.horario}`,s.appendChild(o)}));const h=()=>{p=setTimeout((()=>{abrirModalSenha(a,e,o)}),5e3)},g=()=>clearTimeout(p);if(s.addEventListener("mousedown",h),s.addEventListener("mouseup",g),s.addEventListener("mouseleave",g),s.addEventListener("touchstart",h),s.addEventListener("touchend",g),s.addEventListener("touchcancel",g),statusDias[t]){s.classList.add("dia-vermelho-borda");const e=document.createElement("div");e.className="status-dia",e.textContent="manutencao"===statusDias[t]?"Em Manutenção":"Indisponivel Hoje",s.appendChild(e)}calendar.appendChild(s)}}function abrirModalSenha(e,o,t){const a=document.createElement("div");a.className="modal-overlay";const n=document.createElement("div");n.className="modal-content",n.innerHTML='\n    <h3>Acesso restrito</h3>\n    <input type="password" placeholder="Digite a senha" />\n    <button>Entrar</button>\n  ',n.querySelector("button").onclick=()=>{"terrazzo125"===n.querySelector("input").value?(document.body.removeChild(a),abrirModalStatus(e,o,t)):alert("Senha incorreta.")},a.appendChild(n),document.body.appendChild(a)}function abrirModalStatus(e,o,t){const a=document.createElement("div");a.className="modal-overlay";const n=document.createElement("div");n.className="modal-content",n.innerHTML='\n    <h3>Selecionar status do espaço</h3>\n    <select>\n      <option value="">-- Escolha uma opção --</option>\n      <option value="manutencao">Espaço em Manutenção</option>\n      <option value="bloqueado">Indisponível Hoje</option>\n    </select>\n    <button>Aplicar</button>\n  ',n.querySelector("button").onclick=()=>{const r=n.querySelector("select").value;if(!r)return alert("Selecione uma opção.");const s=`${e}-${o}-${t}`,i=`${t}-${o+1}-${e}`;socket.emit("status-dia",{dia:i,status:r}),aplicarStatusDia(s,r),document.body.removeChild(a)},a.appendChild(n),document.body.appendChild(a)}function aplicarStatusDia(e,o){const t=[...document.querySelectorAll(".day")].find((o=>o.querySelector("h3")?.textContent==e.split("-")[0]));if(t){t.classList.add("dia-vermelho-borda");const e=t.querySelector(".status-dia");e&&e.remove();const a=document.createElement("div");a.className="status-dia",a.textContent="manutencao"===o?"Em Manutenção":"Indisponível Hoje",t.appendChild(a)}}function abrirFormulario(e,o,t,a){const n=feriadosBloqueados(a).some((e=>e.dia===o&&e.mes===t)),r=new Date(a,0,1);if(n&&hoje<r)return void alert("🚫 Esse feriado do ano seguinte só poderá ser reservado após o dia 1º de Janeiro para garantir justiça a todos.");const s=document.createElement("div");s.className="modal-overlay";const i=document.createElement("div");i.className="modal-content",i.innerHTML='\n    <button class="fechar">X</button>\n    <form class="form-inline">\n      <input type="text" placeholder="Nome" required />\n      <div class="hora-bloco">\n        <label>Início:</label>\n        <input type="time" class="hora-inicio" required />\n        <label>Término:</label>\n        <input type="time" class="hora-fim" required />\n      </div>\n      <div class="checkbox-wrapper">\n        <input type="checkbox" id="diaTodo" />\n        <span class="texto-dia-todo">Reservar o dia todo</span>\n      </div>\n      <button type="submit">Agendar</button>\n    </form>\n  ',i.querySelector(".fechar").onclick=()=>document.body.removeChild(s);const c=i.querySelector("form"),d=i.querySelector("#diaTodo"),l=i.querySelector(".hora-inicio"),m=i.querySelector(".hora-fim");d.onchange=()=>{const e=d.checked;l.disabled=e,m.disabled=e,l.style.opacity=e?"0.5":"1",m.style.opacity=e?"0.5":"1"},c.onsubmit=e=>{e.preventDefault();const n=c.querySelector("input[type='text']").value.trim(),r=l.value,i=m.value,u=d.checked;if(!n||!u&&r>=i)return void alert("Preencha todos os campos corretamente e verifique os horários.");const p=u?"Dia inteiro":`${r} - ${i}`,h=new Date(a,t,o).toISOString().split("T")[0];fetch("https://terrazzo-6lae.onrender.com/agendamentos",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({nome:n,horario:p,dia:h,dia_todo:u})}).then((e=>{if(!e.ok)throw new Error(`Erro ${e.status} ao enviar agendamento`);return e.json()})).then((()=>{document.body.removeChild(s),socket.emit("atualizar")})).catch((e=>{alert("Erro ao agendar. Tente novamente."),console.error("⚠️ Falha no envio:",e.message)}))},s.appendChild(i),document.body.appendChild(s)}btnAnterior.onclick=()=>{mesAtual=0===mesAtual?11:mesAtual-1,anoAtual=11===mesAtual?anoAtual-1:anoAtual,carregarAgendamentosDoBanco()},btnProximo.onclick=()=>{mesAtual=11===mesAtual?0:mesAtual+1,anoAtual=0===mesAtual?anoAtual+1:anoAtual,carregarAgendamentosDoBanco()},carregarAgendamentosDoBanco();const socket=io("https://terrazzo-6lae.onrender.com");socket.on("atualizar",(()=>{console.log("📡 Evento recebido: atualizar"),carregarAgendamentosDoBanco()}));const estiloExtra=document.createElement("style");estiloExtra.textContent="\n  .dia-vermelho-borda {\n    border-left-color: #818181ff;\n  }\n  .status-dia {\n    margin-top: 5px;\n    font-weight: bold;\n    color: #818181ff;\n    text-align: left;\n  }\n",document.head.appendChild(estiloExtra),setInterval((()=>{console.log("🔄 Atualizando calendário automaticamente..."),carregarAgendamentosDoBanco()}),2e3),document.addEventListener("DOMContentLoaded",(()=>{const e=document.getElementById("btnMostrarFormulario"),o=document.getElementById("formComercio"),t=document.querySelector(".comercios-container");async function a(){try{const e=await fetch("/comercios"),o=await e.json();t.innerHTML="",o.forEach((e=>{const o=document.createElement("div");o.className="comercio-card",o.innerHTML=`\n          ${e.logoUrl?`<img class="logo-comercio" src="${e.logoUrl}" alt="Logo do comércio">`:""}\n          <h4>${e.nomeNegocio}</h4>\n          <p><strong>Tipo:</strong> ${e.tipoNegocio}</p>\n          <p><strong>Descrição:</strong> ${e.descricao}</p>\n          <p><strong>Morador:</strong> ${e.nomeMorador}</p>\n          <p><strong>Local:</strong> Bloco ${e.bloco}, Ap ${e.apartamento}</p>\n          <a class="btn-whatsapp" href="https://wa.me/55${e.telefone.replace(/\D/g,"")}" target="_blank">\n            Chamar no Whats\n          </a>\n          ${e.fotos?.length?`\n            <div class="fotos-mercadorias">\n              ${e.fotos.map((e=>`<img src="${e}" alt="Mercadoria">`)).join("")}\n            </div>\n          `:""}\n        `,t.appendChild(o)}))}catch(e){console.error("Erro ao carregar negócios:",e)}}e?.addEventListener("click",(()=>{const e="block"===o.style.display;o.style.display=e?"none":"block"})),o?.addEventListener("submit",(async e=>{e.preventDefault();const t=new FormData(o);try{if(!(await fetch("/comercios",{method:"POST",body:t})).ok)throw new Error("Erro ao enviar dados");o.reset(),o.style.display="none",a()}catch(e){alert("Falha ao cadastrar negócio. Tente novamente."),console.error(e)}})),a()}));
+const calendar = document.getElementById("calendar"),
+    mesAtualEl = document.getElementById("mesAtual"),
+    btnAnterior = document.getElementById("btnAnterior"),
+    btnProximo = document.getElementById("btnProximo"),
+    nomesMeses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"],
+    diasSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+let hoje = new Date,
+    mesAtual = hoje.getMonth(),
+    anoAtual = hoje.getFullYear(),
+    agendamentos = {},
+    statusDias = {};
+
+function segundoDomingo(e, o) {
+    let t = 1,
+        a = 0;
+    for (; t <= 14;) {
+        if (0 === new Date(o, e, t).getDay() && a++, 2 === a) return t;
+        t++
+    }
+    return null
+}
+
+function feriadosBloqueados(e) {
+    return [{
+        dia: 24,
+        mes: 11
+    }, {
+        dia: 25,
+        mes: 11
+    }, {
+        dia: 31,
+        mes: 11
+    }, {
+        dia: 12,
+        mes: 9
+    }, {
+        dia: segundoDomingo(4, e),
+        mes: 4
+    }, {
+        dia: segundoDomingo(7, e),
+        mes: 7
+    }].filter((e => null !== e.dia))
+}
+
+function carregarAgendamentosDoBanco(e = 0) {
+    Promise.all([fetch("https://terrazzo-6lae.onrender.com/agendamentos").then((e => e.json())), fetch("https://terrazzo-6lae.onrender.com/status-dia").then((e => e.json()))]).then((([e, o]) => {
+        agendamentos = {}, statusDias = {}, e.forEach((e => {
+            const [o, t, a] = e.dia.split("-").map((e => parseInt(e, 10))), n = `${a}-${t-1}-${o}`;
+            agendamentos[n] || (agendamentos[n] = []), agendamentos[n].push({
+                nome: e.nome,
+                horario: e.horario,
+                diaTodo: e.dia_todo
+            })
+        })), o.forEach((e => {
+            const [o, t, a] = e.dia.split("-").map((e => parseInt(e, 10)));
+            statusDias[`${a}-${t-1}-${o}`] = e.status
+        })), criarCalendario(mesAtual, anoAtual)
+    })).catch((e => {
+        console.error("Erro ao carregar dados:", e.message), calendar.innerHTML = '<p class="erro-calendario">🚫 Erro ao carregar dados. Tente atualizar a página.</p>'
+    }))
+}
+
+function criarCalendario(e, o) {
+    calendar.innerHTML = "";
+    mesAtualEl.textContent = `${nomesMeses[e]} ${o}`;
+    const t = new Date(o, e + 1, 0).getDate();
+    feriadosBloqueados(hoje.getFullYear() + 1);
+
+    for (let a = 1; a <= t; a++) {
+        const t = `${a}-${e}-${o}`,
+            n = new Date(o, e, a),
+            r = diasSemana[n.getDay()],
+            s = document.createElement("div");
+        s.className = "day";
+
+        const i = a === hoje.getDate() && e === hoje.getMonth() && o === hoje.getFullYear();
+        s.innerHTML = `
+            <h3 class="${i ? "hoje-vermelho" : ""}">${a}</h3>
+            <p class="dia-sem">${r}</p>
+        `;
+
+        const c = agendamentos[t] || [],
+            d = c.length,
+            l = c.some((e => e.diaTodo));
+
+        s.classList.remove("dia-verde", "dia-amarelo", "dia-vermelho");
+        if (d >= 3 || l) {
+            s.classList.add("dia-vermelho");
+        } else if (d === 2) {
+            s.classList.add("dia-amarelo");
+        } else if (d === 1) {
+            s.classList.add("dia-verde");
+        }
+
+        const m = feriadosBloqueados(o).some((o => o.dia === a && o.mes === e)) && hoje < new Date(o, 0, 1),
+            u = statusDias[t] === "manutencao" || statusDias[t] === "bloqueado",
+            ehDiaLimpeza = n.getDay() === 3 || n.getDay() === 4; // Quarta ou Quinta
+
+        if (ehDiaLimpeza) {
+            s.classList.add("dia-limpeza");
+            const limpezaTag = document.createElement("div");
+            limpezaTag.className = "status-limpeza";
+            limpezaTag.textContent = "Dia de Limpeza";
+            s.appendChild(limpezaTag);
+        }
+
+        if (d < 3 && !l && !m && !u && !ehDiaLimpeza) {
+            const n = document.createElement("button");
+            n.className = "btn-plus";
+            n.innerText = "+";
+            n.onclick = () => abrirFormulario(t, a, e, o);
+            s.appendChild(n);
+        }
+
+        let p;
+        c.forEach((e => {
+            const o = document.createElement("div");
+            o.className = "agendado";
+            o.textContent = `${e.nome} - ${e.horario}`;
+            s.appendChild(o);
+        }));
+
+        const h = () => {
+                p = setTimeout(() => abrirModalSenha(a, e, o), 5000);
+            },
+            g = () => clearTimeout(p);
+
+        s.addEventListener("mousedown", h);
+        s.addEventListener("mouseup", g);
+        s.addEventListener("mouseleave", g);
+        s.addEventListener("touchstart", h);
+        s.addEventListener("touchend", g);
+        s.addEventListener("touchcancel", g);
+
+        if (statusDias[t]) {
+            s.classList.add("dia-vermelho-borda");
+            const e = document.createElement("div");
+            e.className = "status-dia";
+            e.textContent = statusDias[t] === "manutencao" ? "Em Manutenção" : "Indisponível Hoje";
+            s.appendChild(e);
+        }
+
+        calendar.appendChild(s);
+    }
+}
+
+function abrirModalSenha(e, o, t) {
+    const a = document.createElement("div");
+    a.className = "modal-overlay";
+    const n = document.createElement("div");
+    n.className = "modal-content", n.innerHTML = '\n <h3>Acesso restrito</h3>\n <input type="password" placeholder="Digite a senha" />\n <button>Entrar</button>\n ', n.querySelector("button").onclick = () => {
+        "terrazzo125" === n.querySelector("input").value ? (document.body.removeChild(a), abrirModalStatus(e, o, t)) : alert("Senha incorreta.")
+    }, a.appendChild(n), document.body.appendChild(a)
+}
+
+function abrirModalStatus(e, o, t) {
+    const a = document.createElement("div");
+    a.className = "modal-overlay";
+    const n = document.createElement("div");
+    n.className = "modal-content", n.innerHTML = '\n <h3>Selecionar status do espaço</h3>\n <select>\n <option value="">-- Escolha uma opção --</option>\n <option value="manutencao">Espaço em Manutenção</option>\n <option value="bloqueado">Indisponível Hoje</option>\n </select>\n <button>Aplicar</button>\n ', n.querySelector("button").onclick = () => {
+        const r = n.querySelector("select").value;
+        if (!r) return alert("Selecione uma opção.");
+        const s = `${e}-${o}-${t}`,
+            i = `${t}-${o+1}-${e}`;
+        socket.emit("status-dia", {
+            dia: i,
+            status: r
+        }), aplicarStatusDia(s, r), document.body.removeChild(a)
+    }, a.appendChild(n), document.body.appendChild(a)
+}
+
+function aplicarStatusDia(e, o) {
+    const t = [...document.querySelectorAll(".day")].find((o => o.querySelector("h3")?.textContent == e.split("-")[0]));
+    if (t) {
+        t.classList.add("dia-vermelho-borda");
+        const e = t.querySelector(".status-dia");
+        e && e.remove();
+        const a = document.createElement("div");
+        a.className = "status-dia", a.textContent = "manutencao" === o ? "Em Manutenção" : "Indisponível Hoje", t.appendChild(a)
+    }
+}
+
+function abrirFormulario(e, o, t, a) {
+    const n = feriadosBloqueados(a).some((e => e.dia === o && e.mes === t)),
+        r = new Date(a, 0, 1);
+    if (n && hoje < r) return void alert("🚫 Esse feriado do ano seguinte só poderá ser reservado após o dia 1º de Janeiro para garantir justiça a todos.");
+    const s = document.createElement("div");
+    s.className = "modal-overlay";
+    const i = document.createElement("div");
+    i.className = "modal-content", i.innerHTML = '\n    <button class="fechar">X</button>\n    <form class="form-inline">\n      <input type="text" placeholder="Nome" required />\n      <div class="hora-bloco">\n        <label>Início:</label>\n        <input type="time" class="hora-inicio" required />\n        <label>Término:</label>\n        <input type="time" class="hora-fim" required />\n      </div>\n      <div class="checkbox-wrapper">\n        <input type="checkbox" id="diaTodo" />\n        <span class="texto-dia-todo">Reservar o dia todo</span>\n      </div>\n      <button type="submit">Agendar</button>\n    </form>\n  ', i.querySelector(".fechar").onclick = () => document.body.removeChild(s);
+    const c = i.querySelector("form"),
+        d = i.querySelector("#diaTodo"),
+        l = i.querySelector(".hora-inicio"),
+        m = i.querySelector(".hora-fim");
+    d.onchange = () => {
+        const e = d.checked;
+        l.disabled = e, m.disabled = e, l.style.opacity = e ? "0.5" : "1", m.style.opacity = e ? "0.5" : "1"
+    }, c.onsubmit = e => {
+        e.preventDefault();
+        const n = c.querySelector("input[type='text']").value.trim(),
+            r = l.value,
+            i = m.value,
+            u = d.checked;
+        if (!n || !u && r >= i) return void alert("Preencha todos os campos corretamente e verifique os horários.");
+        const p = u ? "Dia inteiro" : `${r} - ${i}`,
+            h = new Date(a, t, o).toISOString().split("T")[0];
+        fetch("https://terrazzo-6lae.onrender.com/agendamentos", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                nome: n,
+                horario: p,
+                dia: h,
+                dia_todo: u
+            })
+        }).then((e => {
+            if (!e.ok) throw new Error(`Erro ${e.status} ao enviar agendamento`);
+            return e.json()
+        })).then((() => {
+            document.body.removeChild(s), socket.emit("atualizar")
+        })).catch((e => {
+            alert("Erro ao agendar. Tente novamente."), console.error("⚠️ Falha no envio:", e.message)
+        }))
+    }, s.appendChild(i), document.body.appendChild(s)
+}
+btnAnterior.onclick = () => {
+    mesAtual = 0 === mesAtual ? 11 : mesAtual - 1, anoAtual = 11 === mesAtual ? anoAtual - 1 : anoAtual, carregarAgendamentosDoBanco()
+}, btnProximo.onclick = () => {
+    mesAtual = 11 === mesAtual ? 0 : mesAtual + 1, anoAtual = 0 === mesAtual ? anoAtual + 1 : anoAtual, carregarAgendamentosDoBanco()
+}, carregarAgendamentosDoBanco();
+const socket = io("https://terrazzo-6lae.onrender.com");
+socket.on("atualizar", (() => {
+    console.log("📡 Evento recebido: atualizar"), carregarAgendamentosDoBanco()
+}));
+const estiloExtra = document.createElement("style");
+estiloExtra.textContent = "\n .dia-vermelho-borda {\n border-left-color: #818181ff;\n }\n .status-dia {\n margin-top: 5px;\n font-weight: bold;\n color: #818181ff;\n text-align: left;\n }\n", document.head.appendChild(estiloExtra), setInterval((() => {
+    console.log("🔄 Atualizando calendário automaticamente..."), carregarAgendamentosDoBanco()
+}), 2e3), document.addEventListener("DOMContentLoaded", (() => {
+    const e = document.getElementById("btnMostrarFormulario"),
+        o = document.getElementById("formComercio"),
+        t = document.querySelector(".comercios-container");
+    async function a() {
+        try {
+            const e = await fetch("/comercios"),
+                o = await e.json();
+            t.innerHTML = "", o.forEach((e => {
+                const o = document.createElement("div");
+                o.className = "comercio-card", o.innerHTML = `\n ${e.logoUrl?`<img class="logo-comercio" src="${e.logoUrl}" alt="Logo do comércio">`:""}\n <h4>${e.nomeNegocio}</h4>\n <p><strong>Tipo:</strong> ${e.tipoNegocio}</p>\n <p><strong>Descrição:</strong> ${e.descricao}</p>\n <p><strong>Morador:</strong> ${e.nomeMorador}</p>\n <p><strong>Local:</strong> Bloco ${e.bloco}, Ap ${e.apartamento}</p>\n <a class="btn-whatsapp" href="https://wa.me/55${e.telefone.replace(/\D/g,"")}" target="_blank">\n Chamar no Whats\n </a>\n ${e.fotos?.length?`\n <div class="fotos-mercadorias">\n ${e.fotos.map((e=>`<img src="${e}" alt="Mercadoria">`)).join("")}\n </div>\n `:""}\n `, t.appendChild(o)
+            }))
+        } catch (e) {
+            console.error("Erro ao carregar negócios:", e)
+        }
+    }
+    e?.addEventListener("click", (() => {
+        const e = "block" === o.style.display;
+        o.style.display = e ? "none" : "block"
+    })), o?.addEventListener("submit", (async e => {
+        e.preventDefault();
+        const t = new FormData(o);
+        try {
+            if (!(await fetch("/comercios", {
+                    method: "POST",
+                    body: t
+                })).ok) throw new Error("Erro ao enviar dados");
+            o.reset(), o.style.display = "none", a()
+        } catch (e) {
+            alert("Falha ao cadastrar negócio. Tente novamente."), console.error(e)
+        }
+    })), a()
+}));
