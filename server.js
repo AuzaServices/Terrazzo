@@ -196,12 +196,20 @@ io.on("connection", (socket) => {
   socket.on("status-dia", ({ dia, status }) => {
     if (!dia) return;
 
-    if (status === "livre") {
-      pool.query("DELETE FROM status_dias WHERE dia = ?", [dia], (err) => {
-        if (err) return console.error("❌ Erro ao remover status:", err.message);
-        console.log(`✅ Dia ${dia} liberado para uso`);
-        io.emit("atualizar");
-      });
+if (status === "livre") {
+  // Remove status do dia
+  pool.query("DELETE FROM status_dias WHERE dia = ?", [dia], (err) => {
+    if (err) return console.error("❌ Erro ao remover status:", err.message);
+    console.log(`✅ Status removido do dia ${dia}`);
+
+    // Remove agendamentos do dia
+    pool.query("DELETE FROM agendamentos WHERE dia = ?", [dia], (err) => {
+      if (err) return console.error("❌ Erro ao remover agendamentos:", err.message);
+      console.log(`🧹 Agendamentos removidos do dia ${dia}`);
+      io.emit("atualizar");
+    });
+  });
+
     } else if (["manutencao", "bloqueado", "limpeza"].includes(status)) {
       const query = `
         INSERT INTO status_dias (dia, status)
