@@ -103,6 +103,7 @@ function criarCalendario(e, o) {
             s.appendChild(e);
         }
 
+        // ✅ Botão "+" só aparece se o dia estiver liberado
         if (c < 3 && !l && !m && !u && !isDiaLimpeza) {
             const n = document.createElement("button");
             n.className = "btn-plus";
@@ -131,11 +132,11 @@ function criarCalendario(e, o) {
         s.addEventListener("touchend", v);
         s.addEventListener("touchcancel", v);
 
-        if (statusDias[t]) {
+        if (statusDias[t] && status !== "livre") {
             s.classList.add("dia-vermelho-borda");
             const e = document.createElement("div");
             e.className = "status-dia";
-            e.textContent = statusDias[t] === "manutencao" ? "Em Manutenção" : "Indisponível Hoje";
+            e.textContent = status === "manutencao" ? "Em Manutenção" : "Indisponível Hoje";
             s.appendChild(e);
         }
 
