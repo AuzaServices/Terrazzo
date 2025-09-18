@@ -16,8 +16,8 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static("public")); // Serve HTML, CSS, JS
-app.use("/uploads", express.static(path.join(__dirname, "public/uploads"))); // Serve imagens
+app.use(express.static("public"));
+app.use("/uploads", express.static(path.join(__dirname, "public/uploads")));
 
 // Banco de dados
 const pool = mysql.createPool({
@@ -31,7 +31,48 @@ const pool = mysql.createPool({
   queueLimit: 0
 });
 
-// Função para registrar dias de limpeza automaticamente
+// 🧹 Limpeza anual automática
+function limpezaAnual() {
+  const hoje = new Date();
+  const ehPrimeiroDeJaneiro = hoje.getDate() === 1 && hoje.getMonth() === 0;
+
+  if (!ehPrimeiroDeJaneiro) return;
+
+  const anoAnterior = hoje.getFullYear() - 1;
+  const anoAtual = hoje.getFullYear();
+
+  pool.query("DELETE FROM agendamentos WHERE YEAR(dia) = ?", [anoAnterior], (err) => {
+    if (err) console.error("❌ Erro ao apagar agendamentos do ano anterior:", err.message);
+    else console.log(`🧹 Agendamentos de ${anoAnterior} removidos`);
+  });
+
+  pool.query("DELETE FROM status_dias WHERE YEAR(dia) = ?", [anoAnterior], (err) => {
+    if (err) console.error("❌ Erro ao apagar status do ano anterior:", err.message);
+    else console.log(`🧹 Status de ${anoAnterior} removidos`);
+  });
+
+  for (let mes = 0; mes < 12; mes++) {
+    const diasNoMes = new Date(anoAtual, mes + 1, 0).getDate();
+    for (let dia = 1; dia <= diasNoMes; dia++) {
+      const data = new Date(anoAtual, mes, dia);
+      const diaSemana = data.getDay();
+      if (diaSemana === 3 || diaSemana === 4) {
+        const diaFormatado = `${anoAtual}-${mes + 1}-${dia}`;
+        pool.query(
+          `INSERT IGNORE INTO status_dias (dia, status) VALUES (?, ?)`,
+          [diaFormatado, "limpeza"],
+          (err) => {
+            if (err) console.error("❌ Erro ao registrar limpeza:", err.message);
+          }
+        );
+      }
+    }
+  }
+
+  console.log(`✅ Limpeza anual executada para ${anoAnterior} e preenchido ${anoAtual}`);
+}
+
+// 📅 Preenche próximos 12 meses com limpeza
 function registrarDiasDeLimpeza() {
   const hoje = new Date();
   const anoAtual = hoje.getFullYear();
@@ -44,8 +85,7 @@ function registrarDiasDeLimpeza() {
 
     for (let d = 1; d <= diasNoMes; d++) {
       const data = new Date(ano, mes, d);
-      const diaSemana = data.getDay(); // 3 = quarta, 4 = quinta
-
+      const diaSemana = data.getDay();
       if (diaSemana === 3 || diaSemana === 4) {
         const diaFormatado = `${ano}-${mes + 1}-${d}`;
         pool.query(
@@ -65,10 +105,7 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-//////////////////////////
 // 📅 AGENDAMENTOS
-//////////////////////////
-
 app.get("/agendamentos", (req, res) => {
   pool.query("SELECT * FROM agendamentos", (err, resultados) => {
     if (err) return res.status(500).json({ erro: err.message });
@@ -114,10 +151,7 @@ app.get("/status-dia", (req, res) => {
   });
 });
 
-//////////////////////////
-// 🛍️ COMÉRCIOS DOS MORADORES
-//////////////////////////
-
+// 🛍️ COMÉRCIOS
 const storage = multer.diskStorage({
   destination: "public/uploads/",
   filename: (req, file, cb) => {
@@ -186,30 +220,24 @@ app.get("/comercios", (req, res) => {
   });
 });
 
-//////////////////////////
 // 📡 WEBSOCKET
-//////////////////////////
-
 io.on("connection", (socket) => {
   console.log("📡 Cliente conectado");
 
   socket.on("status-dia", ({ dia, status }) => {
     if (!dia) return;
 
-if (status === "livre") {
-  // Remove status do dia
-  pool.query("DELETE FROM status_dias WHERE dia = ?", [dia], (err) => {
-    if (err) return console.error("❌ Erro ao remover status:", err.message);
-    console.log(`✅ Status removido do dia ${dia}`);
+    if (status === "livre") {
+      pool.query("DELETE FROM status_dias WHERE dia = ?", [dia], (err) => {
+        if (err) return console.error("❌ Erro ao remover status:", err.message);
+        console.log(`✅ Status removido do dia ${dia}`);
 
-    // Remove agendamentos do dia
-    pool.query("DELETE FROM agendamentos WHERE dia = ?", [dia], (err) => {
-      if (err) return console.error("❌ Erro ao remover agendamentos:", err.message);
-      console.log(`🧹 Agendamentos removidos do dia ${dia}`);
-      io.emit("atualizar");
-    });
-  });
-
+                pool.query("DELETE FROM agendamentos WHERE dia = ?", [dia], (err) => {
+          if (err) return console.error("❌ Erro ao remover agendamentos:", err.message);
+          console.log(`🧹 Agendamentos removidos do dia ${dia}`);
+          io.emit("atualizar");
+        });
+      });
     } else if (["manutencao", "bloqueado", "limpeza"].includes(status)) {
       const query = `
         INSERT INTO status_dias (dia, status)
@@ -235,7 +263,8 @@ if (status === "livre") {
 // 🚀 INICIAR SERVIDOR
 //////////////////////////
 
-registrarDiasDeLimpeza(); // ⬅️ Preenche os dias de limpeza ao iniciar
+limpezaAnual(); // Executa limpeza anual se for 01 de janeiro
+registrarDiasDeLimpeza(); // Preenche os próximos 12 meses com limpeza
 
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
