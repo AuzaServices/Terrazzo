@@ -167,24 +167,28 @@ app.get("/comercios", (req, res) => {
 io.on("connection", (socket) => {
   console.log("📡 Cliente conectado");
 
-  socket.on("status-dia", ({ dia, status }) => {
-    if (!dia || !status) return;
+socket.on("status-dia", ({ dia, status }) => {
+  if (!dia || !status) return;
 
+  if (status === "livre") {
+    // Remove o status do dia
+    pool.query("DELETE FROM status_dias WHERE dia = ?", [dia], (err) => {
+      if (err) return console.error("Erro ao remover status:", err.message);
+      io.emit("atualizar");
+    });
+  } else {
+    // Atualiza ou insere novo status
     const query = `
       INSERT INTO status_dias (dia, status)
       VALUES (?, ?)
       ON DUPLICATE KEY UPDATE status = VALUES(status)
     `;
-
     pool.query(query, [dia, status], (err) => {
       if (err) return console.error("Erro ao salvar status:", err.message);
       io.emit("atualizar");
     });
-  });
-
-  socket.on("disconnect", () => {
-    console.log("👋 Cliente desconectado");
-  });
+  }
+});
 });
 
 //////////////////////////
