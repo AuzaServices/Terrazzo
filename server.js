@@ -22,9 +22,9 @@ app.use("/uploads", express.static(path.join(__dirname, "public/uploads")));
 // Banco de dados
 const pool = mysql.createPool({
   host: "sql10.freesqldatabase.com",
-  user: "sql10792206",
-  password: "hKT4bm2WIP",
-  database: "sql10792206",
+  user: "sql10799187",
+  password: "NZdlWeIzBf",
+  database: "sql10799187",
   port: 3306,
   waitForConnections: true,
   connectionLimit: 10,
