@@ -238,7 +238,6 @@ io.on("connection", (socket) => {
 //////////////////////////
 
 limpezaAnual(); // Executa limpeza anual se for 01 de janeiro
-registrarDiasDeLimpeza(); // Preenche os próximos 12 meses com limpeza
 
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
