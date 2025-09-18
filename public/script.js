@@ -61,48 +61,85 @@ function carregarAgendamentosDoBanco(e = 0) {
 }
 
 function criarCalendario(e, o) {
-    calendar.innerHTML = "", mesAtualEl.textContent = `${nomesMeses[e]} ${o}`;
+    calendar.innerHTML = "";
+    mesAtualEl.textContent = `${nomesMeses[e]} ${o}`;
     const t = new Date(o, e + 1, 0).getDate();
     feriadosBloqueados(hoje.getFullYear() + 1);
+
     for (let a = 1; a <= t; a++) {
         const t = `${a}-${e}-${o}`,
-            n = new Date(o, e, a),
-            r = diasSemana[n.getDay()],
-            s = document.createElement("div");
+              n = new Date(o, e, a),
+              r = diasSemana[n.getDay()],
+              s = document.createElement("div");
+
         s.className = "day";
+
         const i = a === hoje.getDate() && e === hoje.getMonth() && o === hoje.getFullYear();
-        s.innerHTML = `\n            <h3 class="${i?"hoje-vermelho":""}">${a}</h3>\n            <p class="dia-sem">${r}</p>\n        `;
+        s.innerHTML = `
+            <h3 class="${i ? "hoje-vermelho" : ""}">${a}</h3>
+            <p class="dia-sem">${r}</p>
+        `;
+
         const d = agendamentos[t] || [],
-            c = d.length,
-            l = d.some((e => e.diaTodo));
-        s.classList.remove("dia-verde", "dia-amarelo", "dia-vermelho"), c >= 3 || l ? s.classList.add("dia-vermelho") : 2 === c ? s.classList.add("dia-amarelo") : 1 === c && s.classList.add("dia-verde");
+              c = d.length,
+              l = d.some((e => e.diaTodo));
+
+        s.classList.remove("dia-verde", "dia-amarelo", "dia-vermelho");
+        c >= 3 || l ? s.classList.add("dia-vermelho")
+        : c === 2 ? s.classList.add("dia-amarelo")
+        : c === 1 && s.classList.add("dia-verde");
+
         const m = feriadosBloqueados(o).some((o => o.dia === a && o.mes === e)) && hoje < new Date(o, 0, 1),
-            u = "manutencao" === statusDias[t] || "bloqueado" === statusDias[t],
-            p = 3 === n.getDay() || 4 === n.getDay();
-        if (p) {
+              u = statusDias[t] === "manutencao" || statusDias[t] === "bloqueado",
+              status = statusDias[t],
+              isDiaLimpeza = (n.getDay() === 3 || n.getDay() === 4) && status !== "livre";
+
+        // ✅ Dia de Limpeza só aparece se não estiver liberado
+        if (isDiaLimpeza) {
             s.classList.add("dia-limpeza");
             const e = document.createElement("div");
-            e.className = "status-limpeza", e.textContent = "Dia de Limpeza", s.appendChild(e)
+            e.className = "status-limpeza";
+            e.textContent = "Dia de Limpeza";
+            s.appendChild(e);
         }
-        if (c < 3 && !l && !m && !u && !p) {
+
+        if (c < 3 && !l && !m && !u && !isDiaLimpeza) {
             const n = document.createElement("button");
-            n.className = "btn-plus", n.innerText = "+", n.onclick = () => abrirFormulario(t, a, e, o), s.appendChild(n)
+            n.className = "btn-plus";
+            n.innerText = "+";
+            n.onclick = () => abrirFormulario(t, a, e, o);
+            s.appendChild(n);
         }
+
         let h;
         d.forEach((e => {
             const o = document.createElement("div");
-            o.className = "agendado", o.textContent = `${e.nome} - ${e.horario}`, s.appendChild(o)
+            o.className = "agendado";
+            o.textContent = `${e.nome} - ${e.horario}`;
+            s.appendChild(o);
         }));
+
         const g = () => {
-                h = setTimeout((() => abrirModalSenha(a, e, o)), 5e3)
-            },
-            v = () => clearTimeout(h);
-        if (s.addEventListener("mousedown", g), s.addEventListener("mouseup", v), s.addEventListener("mouseleave", v), s.addEventListener("touchstart", g), s.addEventListener("touchend", v), s.addEventListener("touchcancel", v), statusDias[t]) {
+            h = setTimeout(() => abrirModalSenha(a, e, o), 5000);
+        };
+        const v = () => clearTimeout(h);
+
+        s.addEventListener("mousedown", g);
+        s.addEventListener("mouseup", v);
+        s.addEventListener("mouseleave", v);
+        s.addEventListener("touchstart", g);
+        s.addEventListener("touchend", v);
+        s.addEventListener("touchcancel", v);
+
+        if (statusDias[t]) {
             s.classList.add("dia-vermelho-borda");
             const e = document.createElement("div");
-            e.className = "status-dia", e.textContent = "manutencao" === statusDias[t] ? "Em Manutenção" : "Indisponível Hoje", s.appendChild(e)
+            e.className = "status-dia";
+            e.textContent = statusDias[t] === "manutencao" ? "Em Manutenção" : "Indisponível Hoje";
+            s.appendChild(e);
         }
-        calendar.appendChild(s)
+
+        calendar.appendChild(s);
     }
 }
 
