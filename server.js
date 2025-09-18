@@ -167,30 +167,37 @@ app.get("/comercios", (req, res) => {
 io.on("connection", (socket) => {
   console.log("📡 Cliente conectado");
 
-socket.on("status-dia", ({ dia, status }) => {
-if (!dia) return;
+  socket.on("status-dia", ({ dia, status }) => {
+    if (!dia) return;
 
-if (status === "livre") {
-  pool.query("DELETE FROM status_dias WHERE dia = ?", [dia], (err) => {
-    if (err) return console.error("Erro ao remover status:", err.message);
-    console.log(`✅ Dia ${dia} liberado para uso`);
-    io.emit("atualizar");
+    if (status === "livre") {
+      // 🔄 Remove qualquer status salvo para esse dia
+      pool.query("DELETE FROM status_dias WHERE dia = ?", [dia], (err) => {
+        if (err) return console.error("❌ Erro ao remover status:", err.message);
+        console.log(`✅ Dia ${dia} liberado para uso`);
+        io.emit("atualizar");
+      });
+    } else if (["manutencao", "bloqueado", "limpeza"].includes(status)) {
+      // 💾 Salva ou atualiza status no banco
+      const query = `
+        INSERT INTO status_dias (dia, status)
+        VALUES (?, ?)
+        ON DUPLICATE KEY UPDATE status = VALUES(status)
+      `;
+      pool.query(query, [dia, status], (err) => {
+        if (err) return console.error("❌ Erro ao salvar status:", err.message);
+        console.log(`⚙️ Status "${status}" aplicado ao dia ${dia}`);
+        io.emit("atualizar");
+      });
+    } else {
+      // 🚫 Status inválido
+      console.warn(`⚠️ Status inválido recebido: "${status}"`);
+    }
   });
-} else if (status === "manutencao" || status === "bloqueado") {
-  const query = `
-    INSERT INTO status_dias (dia, status)
-    VALUES (?, ?)
-    ON DUPLICATE KEY UPDATE status = VALUES(status)
-  `;
-  pool.query(query, [dia, status], (err) => {
-    if (err) return console.error("Erro ao salvar status:", err.message);
-    console.log(`⚙️ Status "${status}" aplicado ao dia ${dia}`);
-    io.emit("atualizar");
+
+  socket.on("disconnect", () => {
+    console.log("👋 Cliente desconectado");
   });
-} else {
-  console.warn(`⚠️ Status inválido recebido: "${status}"`);
-}
-});
 });
 
 //////////////////////////
