@@ -31,6 +31,35 @@ const pool = mysql.createPool({
   queueLimit: 0
 });
 
+// Função para registrar dias de limpeza automaticamente
+function registrarDiasDeLimpeza() {
+  const hoje = new Date();
+  const anoAtual = hoje.getFullYear();
+  const mesesFuturos = 12;
+
+  for (let m = 0; m < mesesFuturos; m++) {
+    const ano = anoAtual + Math.floor((hoje.getMonth() + m) / 12);
+    const mes = (hoje.getMonth() + m) % 12;
+    const diasNoMes = new Date(ano, mes + 1, 0).getDate();
+
+    for (let d = 1; d <= diasNoMes; d++) {
+      const data = new Date(ano, mes, d);
+      const diaSemana = data.getDay(); // 3 = quarta, 4 = quinta
+
+      if (diaSemana === 3 || diaSemana === 4) {
+        const diaFormatado = `${ano}-${mes + 1}-${d}`;
+        pool.query(
+          `INSERT IGNORE INTO status_dias (dia, status) VALUES (?, ?)`,
+          [diaFormatado, "limpeza"],
+          (err) => {
+            if (err) console.error("❌ Erro ao registrar limpeza:", err.message);
+          }
+        );
+      }
+    }
+  }
+}
+
 // Página principal
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
@@ -89,7 +118,6 @@ app.get("/status-dia", (req, res) => {
 // 🛍️ COMÉRCIOS DOS MORADORES
 //////////////////////////
 
-// Configuração do multer
 const storage = multer.diskStorage({
   destination: "public/uploads/",
   filename: (req, file, cb) => {
@@ -100,7 +128,6 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// POST: cadastrar comércio
 app.post("/comercios", upload.fields([
   { name: "logo", maxCount: 1 },
   { name: "fotos[]", maxCount: 10 }
@@ -146,7 +173,6 @@ app.post("/comercios", upload.fields([
   });
 });
 
-// GET: listar comércios
 app.get("/comercios", (req, res) => {
   pool.query("SELECT * FROM comercios", (err, resultados) => {
     if (err) return res.status(500).json({ erro: err.message });
@@ -200,6 +226,8 @@ io.on("connection", (socket) => {
 //////////////////////////
 // 🚀 INICIAR SERVIDOR
 //////////////////////////
+
+registrarDiasDeLimpeza(); // ⬅️ Preenche os dias de limpeza ao iniciar
 
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
