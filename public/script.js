@@ -95,17 +95,9 @@ function criarCalendario(mes, ano) {
         const ehFeriado = feriadosBloqueados(ano).some((f) => f.dia === dia && f.mes === mes) && hoje < new Date(ano, 0, 1);
         const status = statusDias[chave];
         const ehBloqueado = status === "manutencao" || status === "bloqueado";
-        const ehDiaLimpeza = (data.getDay() === 3 || data.getDay() === 4) && status !== "livre";
+        const ehDiaLimpeza = status === "limpeza";
 
         // ✅ Salva "limpeza" no banco se for quarta ou quinta e ainda não tiver status
-if ((data.getDay() === 3 || data.getDay() === 4) && !statusDias[chave] && status !== "livre") {
-    const diaFormatado = `${ano}-${mes + 1}-${dia}`;
-    limpezaRegistrada[chave] = true; // evita duplicação
-    socket.emit("status-dia", {
-        dia: diaFormatado,
-        status: "limpeza"
-    });
-}
 
         // ✅ Exibe visual de limpeza se for quarta ou quinta e não estiver liberado
         if (ehDiaLimpeza) {
