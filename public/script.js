@@ -100,13 +100,6 @@ function criarCalendario(mes, ano) {
         // ✅ Salva "limpeza" no banco se for quarta ou quinta e ainda não tiver status
 
         // ✅ Exibe visual de limpeza se for quarta ou quinta e não estiver liberado
-        if (ehDiaLimpeza) {
-            elementoDia.classList.add("dia-limpeza");
-            const statusEl = document.createElement("div");
-            statusEl.className = "status-limpeza";
-            statusEl.textContent = "Dia de Limpeza";
-            elementoDia.appendChild(statusEl);
-        }
 
         // ✅ Exibe botão "+" se o dia estiver liberado
         if (totalAgendados < 3 && !temDiaTodo && !ehFeriado && !ehBloqueado && !ehDiaLimpeza) {
