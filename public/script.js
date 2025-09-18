@@ -90,11 +90,11 @@ function criarCalendario(e, o) {
         : c === 1 && s.classList.add("dia-verde");
 
         const m = feriadosBloqueados(o).some((o => o.dia === a && o.mes === e)) && hoje < new Date(o, 0, 1),
-              u = statusDias[t] === "manutencao" || statusDias[t] === "bloqueado",
               status = statusDias[t],
+              u = status === "manutencao" || status === "bloqueado",
               isDiaLimpeza = (n.getDay() === 3 || n.getDay() === 4) && status !== "livre";
 
-        // ✅ Dia de Limpeza só aparece se não estiver liberado
+        // ✅ Mostrar "Dia de Limpeza" apenas se não estiver liberado
         if (isDiaLimpeza) {
             s.classList.add("dia-limpeza");
             const e = document.createElement("div");
@@ -103,7 +103,7 @@ function criarCalendario(e, o) {
             s.appendChild(e);
         }
 
-        // ✅ Botão "+" só aparece se o dia estiver liberado
+        // ✅ Mostrar botão "+" se o dia estiver liberado
         if (c < 3 && !l && !m && !u && !isDiaLimpeza) {
             const n = document.createElement("button");
             n.className = "btn-plus";
@@ -132,7 +132,8 @@ function criarCalendario(e, o) {
         s.addEventListener("touchend", v);
         s.addEventListener("touchcancel", v);
 
-        if (statusDias[t] && status !== "livre") {
+        // ✅ Mostrar status visual, exceto se for "livre"
+        if (status && status !== "livre") {
             s.classList.add("dia-vermelho-borda");
             const e = document.createElement("div");
             e.className = "status-dia";
