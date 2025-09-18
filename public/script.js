@@ -59,7 +59,7 @@ function carregarAgendamentosDoBanco(e = 0) {
         console.error("Erro ao carregar dados:", e.message), calendar.innerHTML = '<p class="erro-calendario">🚫 Erro ao carregar dados. Tente atualizar a página.</p>'
     }))
 }
-
+const limpezaRegistrada = {};
 function criarCalendario(mes, ano) {
     calendar.innerHTML = "";
     mesAtualEl.textContent = `${nomesMeses[mes]} ${ano}`;
@@ -98,13 +98,14 @@ function criarCalendario(mes, ano) {
         const ehDiaLimpeza = (data.getDay() === 3 || data.getDay() === 4) && status !== "livre";
 
         // ✅ Salva "limpeza" no banco se for quarta ou quinta e ainda não tiver status
-        if ((data.getDay() === 3 || data.getDay() === 4) && !statusDias[chave]) {
-            const diaFormatado = `${ano}-${mes + 1}-${dia}`;
-            socket.emit("status-dia", {
-                dia: diaFormatado,
-                status: "limpeza"
-            });
-        }
+if ((data.getDay() === 3 || data.getDay() === 4) && !statusDias[chave] && status !== "livre") {
+    const diaFormatado = `${ano}-${mes + 1}-${dia}`;
+    limpezaRegistrada[chave] = true; // evita duplicação
+    socket.emit("status-dia", {
+        dia: diaFormatado,
+        status: "limpeza"
+    });
+}
 
         // ✅ Exibe visual de limpeza se for quarta ou quinta e não estiver liberado
         if (ehDiaLimpeza) {
