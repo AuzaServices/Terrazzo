@@ -73,32 +73,6 @@ function limpezaAnual() {
 }
 
 // 📅 Preenche próximos 12 meses com limpeza
-function registrarDiasDeLimpeza() {
-  const hoje = new Date();
-  const anoAtual = hoje.getFullYear();
-  const mesesFuturos = 12;
-
-  for (let m = 0; m < mesesFuturos; m++) {
-    const ano = anoAtual + Math.floor((hoje.getMonth() + m) / 12);
-    const mes = (hoje.getMonth() + m) % 12;
-    const diasNoMes = new Date(ano, mes + 1, 0).getDate();
-
-    for (let d = 1; d <= diasNoMes; d++) {
-      const data = new Date(ano, mes, d);
-      const diaSemana = data.getDay();
-      if (diaSemana === 3 || diaSemana === 4) {
-        const diaFormatado = `${ano}-${mes + 1}-${d}`;
-        pool.query(
-          `INSERT IGNORE INTO status_dias (dia, status) VALUES (?, ?)`,
-          [diaFormatado, "limpeza"],
-          (err) => {
-            if (err) console.error("❌ Erro ao registrar limpeza:", err.message);
-          }
-        );
-      }
-    }
-  }
-}
 
 // Página principal
 app.get("/", (req, res) => {
