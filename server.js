@@ -171,14 +171,12 @@ io.on("connection", (socket) => {
     if (!dia) return;
 
     if (status === "livre") {
-      // 🔄 Remove qualquer status salvo para esse dia
       pool.query("DELETE FROM status_dias WHERE dia = ?", [dia], (err) => {
         if (err) return console.error("❌ Erro ao remover status:", err.message);
         console.log(`✅ Dia ${dia} liberado para uso`);
         io.emit("atualizar");
       });
     } else if (["manutencao", "bloqueado", "limpeza"].includes(status)) {
-      // 💾 Salva ou atualiza status no banco
       const query = `
         INSERT INTO status_dias (dia, status)
         VALUES (?, ?)
@@ -190,7 +188,6 @@ io.on("connection", (socket) => {
         io.emit("atualizar");
       });
     } else {
-      // 🚫 Status inválido
       console.warn(`⚠️ Status inválido recebido: "${status}"`);
     }
   });
