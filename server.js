@@ -148,47 +148,56 @@ app.post("/comercios", upload.fields([
   { name: "logo", maxCount: 1 },
   { name: "fotos[]", maxCount: 10 }
 ]), (req, res) => {
-  console.log("📦 Arquivos recebidos:", req.files);
-console.log("📝 Dados recebidos:", req.body);
-  const {
-    bloco,
-    apartamento,
-    nomeMorador,
-    telefone,
-    nomeNegocio,
-    tipoNegocio,
-    descricao
-  } = req.body;
+  try {
+    console.log("📦 Arquivos recebidos:", req.files);
+    console.log("📝 Dados recebidos:", req.body);
 
-  const logoUrl = req.files["logo"]
-    ? req.files["logo"][0].path
-    : null;
+    const {
+      bloco,
+      apartamento,
+      nomeMorador,
+      telefone,
+      nomeNegocio,
+      tipoNegocio,
+      descricao
+    } = req.body;
 
-  const fotos = req.files["fotos[]"]
-    ? req.files["fotos[]"].map(file => file.path)
-    : [];
+    const logoUrl = req.files["logo"]
+      ? req.files["logo"][0].path
+      : null;
 
-  const query = `
-    INSERT INTO comercios (
-      bloco, apartamento, nomeMorador, telefone,
-      nomeNegocio, tipoNegocio, descricao, logoUrl, fotos
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `;
+    const fotos = req.files["fotos[]"]
+      ? req.files["fotos[]"].map(file => file.path)
+      : [];
 
-  pool.query(query, [
-    bloco,
-    apartamento,
-    nomeMorador,
-    telefone,
-    nomeNegocio,
-    tipoNegocio,
-    descricao,
-    logoUrl,
-    JSON.stringify(fotos)
-  ], (err, resultado) => {
-    if (err) return res.status(500).json({ erro: err.message });
-    res.json({ sucesso: true, id: resultado.insertId });
-  });
+    const query = `
+      INSERT INTO comercios (
+        bloco, apartamento, nomeMorador, telefone,
+        nomeNegocio, tipoNegocio, descricao, logoUrl, fotos
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    pool.query(query, [
+      bloco,
+      apartamento,
+      nomeMorador,
+      telefone,
+      nomeNegocio,
+      tipoNegocio,
+      descricao,
+      logoUrl,
+      JSON.stringify(fotos)
+    ], (err, resultado) => {
+      if (err) {
+        console.error("❌ Erro ao inserir no banco:", err.message);
+        return res.status(500).json({ erro: err.message });
+      }
+      res.json({ sucesso: true, id: resultado.insertId });
+    });
+  } catch (err) {
+    console.error("❌ Erro inesperado:", err.message);
+    res.status(500).json({ erro: "Erro interno no servidor" });
+  }
 });
 
 app.get("/comercios", (req, res) => {
