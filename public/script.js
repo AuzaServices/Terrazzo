@@ -272,36 +272,73 @@ socket.on("atualizar", (() => {
 const estiloExtra = document.createElement("style");
 estiloExtra.textContent = "\n .dia-vermelho-borda {\n border-left-color: #818181ff;\n }\n .status-dia {\n margin-top: 5px;\n font-weight: bold;\n color: #818181ff;\n text-align: left;\n }\n", document.head.appendChild(estiloExtra), setInterval((() => {
     console.log("🔄 Atualizando calendário automaticamente..."), carregarAgendamentosDoBanco()
-}), 2e3), document.addEventListener("DOMContentLoaded", (() => {
-    const e = document.getElementById("btnMostrarFormulario"),
-        o = document.getElementById("formComercio"),
-        t = document.querySelector(".comercios-container");
-    async function a() {
-        try {
-            const e = await fetch("/comercios"),
-                o = await e.json();
-            t.innerHTML = "", o.forEach((e => {
-                const o = document.createElement("div");
-                o.className = "comercio-card", o.innerHTML = `\n ${e.logoUrl?`<img class="logo-comercio" src="${e.logoUrl}" alt="Logo do comércio">`:""}\n <h4>${e.nomeNegocio}</h4>\n <p><strong>Tipo:</strong> ${e.tipoNegocio}</p>\n <p><strong>Descrição:</strong> ${e.descricao}</p>\n <p><strong>Morador:</strong> ${e.nomeMorador}</p>\n <p><strong>Local:</strong> Bloco ${e.bloco}, Ap ${e.apartamento}</p>\n <a class="btn-whatsapp" href="https://wa.me/55${e.telefone.replace(/\D/g,"")}" target="_blank">\n Chamar no Whats\n </a>\n ${e.fotos?.length?`\n <div class="fotos-mercadorias">\n ${e.fotos.map((e=>`<img src="${e}" alt="Mercadoria">`)).join("")}\n </div>\n `:""}\n `, t.appendChild(o)
-            }))
-        } catch (e) {
-            console.error("Erro ao carregar negócios:", e)
-        }
+}), 2e3), document.addEventListener("DOMContentLoaded", () => {
+  const e = document.getElementById("btnMostrarFormulario");
+  const o = document.getElementById("formComercio");
+  const t = document.querySelector(".comercios-container");
+
+  async function a() {
+    try {
+      const resposta = await fetch("/comercios");
+      const dados = await resposta.json();
+      t.innerHTML = "";
+
+      dados.forEach((e) => {
+        const o = document.createElement("div");
+        o.className = "comercio-card";
+        o.innerHTML = `
+          ${e.logoUrl ? `<img class="logo-comercio" src="${e.logoUrl}" alt="Logo do comércio">` : ""}
+          <h4>${e.nomeNegocio}</h4>
+          <p><strong>Tipo:</strong> ${e.tipoNegocio}</p>
+          <p><strong>Descrição:</strong> ${e.descricao}</p>
+          <p><strong>Morador:</strong> ${e.nomeMorador}</p>
+          <p><strong>Local:</strong> Bloco ${e.bloco}, Ap ${e.apartamento}</p>
+          <a class="btn-whatsapp" href="https://wa.me/55${e.telefone.replace(/\D/g, "")}" target="_blank">
+            Chamar no Whats
+          </a>
+          ${e.fotos?.length ? `
+            <div class="fotos-mercadorias">
+              ${e.fotos.map((url) => `<img src="${url}" alt="Mercadoria">`).join("")}
+            </div>
+          ` : ""}
+        `;
+        t.appendChild(o);
+      });
+    } catch (erro) {
+      console.error("Erro ao carregar negócios:", erro);
     }
-    e?.addEventListener("click", (() => {
-        const e = "block" === o.style.display;
-        o.style.display = e ? "none" : "block"
-    })), o?.addEventListener("submit", (async e => {
-        e.preventDefault();
-        const t = new FormData(o);
-        try {
-            if (!(await fetch("/comercios", {
-                    method: "POST",
-                    body: t
-                })).ok) throw new Error("Erro ao enviar dados");
-            o.reset(), o.style.display = "none", a()
-        } catch (e) {
-            alert("Falha ao cadastrar negócio. Tente novamente."), console.error(e)
-        }
-    })), a()
-}));
+  }
+
+  e?.addEventListener("click", () => {
+    const visivel = o.style.display === "block";
+    o.style.display = visivel ? "none" : "block";
+  });
+
+  o?.addEventListener("submit", async (evento) => {
+    evento.preventDefault();
+    const t = new FormData(o);
+
+    try {
+      const resposta = await fetch("/comercios", {
+        method: "POST",
+        body: t
+      });
+
+      if (!resposta.ok) {
+        const msg = await resposta.text();
+        alert("Falha ao cadastrar negócio: " + msg);
+        console.error("⚠️ Erro detalhado:", msg);
+        return;
+      }
+
+      o.reset();
+      o.style.display = "none";
+      a();
+    } catch (erro) {
+      alert("Erro inesperado ao cadastrar negócio.");
+      console.error("❌ Erro inesperado:", erro);
+    }
+  });
+
+  a();
+});
