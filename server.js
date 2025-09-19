@@ -11,7 +11,6 @@ const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const app = express();
 const server = http.createServer(app);
 const io = socketIO(server);
-
 const PORT = process.env.PORT || 3000;
 
 // 🌩️ Cloudinary config
@@ -23,10 +22,10 @@ cloudinary.config({
 
 const storage = new CloudinaryStorage({
   cloudinary,
-  params: {
+  params: async (req, file) => ({
     folder: "uploads",
-    allowed_formats: ["jpg", "png", "webp"]
-  }
+    resource_type: "image"
+  })
 });
 
 const upload = multer({ storage });
@@ -151,7 +150,6 @@ app.post("/comercios", upload.fields([
   try {
     console.log("📦 Arquivos recebidos:", req.files);
     console.log("📝 Dados recebidos:", req.body);
-    
 
     const {
       bloco,
@@ -163,13 +161,20 @@ app.post("/comercios", upload.fields([
       descricao
     } = req.body;
 
-    const logoUrl = req.files["logo"]
-      ? req.files["logo"][0].path
-      : null;
+    const logoUrl = req.files?.["logo"]?.[0]?.path || null;
+    const fotos = req.files?.["fotos[]"]?.map(file => file.path) || [];
 
-    const fotos = req.files["fotos[]"]
-      ? req.files["fotos[]"].map(file => file.path)
-      : [];
+    console.log("📤 Dados prontos para salvar:", {
+      bloco,
+      apartamento,
+      nomeMorador,
+      telefone,
+      nomeNegocio,
+      tipoNegocio,
+      descricao,
+      logoUrl,
+      fotos
+    });
 
     const query = `
       INSERT INTO comercios (
