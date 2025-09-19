@@ -148,6 +148,8 @@ app.post("/comercios", upload.fields([
   { name: "logo", maxCount: 1 },
   { name: "fotos[]", maxCount: 10 }
 ]), (req, res) => {
+  console.log("📦 Arquivos recebidos:", req.files);
+console.log("📝 Dados recebidos:", req.body);
   const {
     bloco,
     apartamento,

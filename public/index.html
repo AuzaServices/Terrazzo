@@ -105,13 +105,6 @@
 apartamentoInput.addEventListener("input", () => {
   apartamentoInput.value = apartamentoInput.value.replace(/\D/g, "").slice(0, 3);
 
-    const campoTexto = document.querySelector('input[name="campoTexto"]');
-
-  campoTexto.addEventListener("input", () => {
-    if (campoTexto.value.length > 27) {
-      campoTexto.value = campoTexto.value.slice(0, 27);
-    }
-  });
 
 });
 
