@@ -147,10 +147,11 @@ app.get("/status-dia", (req, res) => {
 app.post("/comercios", upload.fields([
   { name: "logo", maxCount: 1 },
   { name: "fotos[]", maxCount: 10 }
-]), (req, res) => {
+]), async (req, res) => {
   try {
     console.log("📦 Arquivos recebidos:", req.files);
     console.log("📝 Dados recebidos:", req.body);
+    
 
     const {
       bloco,
@@ -190,13 +191,13 @@ app.post("/comercios", upload.fields([
     ], (err, resultado) => {
       if (err) {
         console.error("❌ Erro ao inserir no banco:", err.message);
-        return res.status(500).json({ erro: err.message });
+        return res.status(500).send("Erro ao salvar no banco: " + err.message);
       }
       res.json({ sucesso: true, id: resultado.insertId });
     });
   } catch (err) {
     console.error("❌ Erro inesperado:", err.message);
-    res.status(500).json({ erro: "Erro interno no servidor" });
+    res.status(500).send("Erro interno no servidor: " + err.message);
   }
 });
 
