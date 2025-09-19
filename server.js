@@ -88,6 +88,9 @@ app.get("/agendamentos", (req, res) => {
 });
 
 app.post("/agendamentos", (req, res) => {
+  // 👇 Adiciona aqui
+  console.log("📥 Dados recebidos:", req.body);
+
   const { nome, horario, dia, dia_todo } = req.body;
   if (!nome || !horario || !dia) {
     return res.status(400).json({ erro: "Campos obrigatórios ausentes." });
@@ -100,7 +103,10 @@ app.post("/agendamentos", (req, res) => {
   `;
 
   pool.query(query, [nome, horario, dia, diaTodoFormatado], (err, resultado) => {
-    if (err) return res.status(500).json({ erro: err.message });
+    if (err) {
+      console.error("❌ Erro ao inserir agendamento:", err.message); // 👈 E esse também ajuda
+      return res.status(500).json({ erro: err.message });
+    }
     res.json({ sucesso: true, id: resultado.insertId });
     io.emit("atualizar");
   });
