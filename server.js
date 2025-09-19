@@ -5,7 +5,8 @@ const path = require("path");
 const http = require("http");
 const socketIO = require("socket.io");
 const multer = require("multer");
-const fs = require("fs");
+const cloudinary = require("cloudinary").v2;
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
 
 const app = express();
 const server = http.createServer(app);
@@ -13,11 +14,27 @@ const io = socketIO(server);
 
 const PORT = process.env.PORT || 3000;
 
+// 🌩️ Cloudinary config
+cloudinary.config({
+  cloud_name: "dzwkr47ib",
+  api_key: "553561859359519",
+  api_secret: "**********"
+});
+
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "uploads",
+    allowed_formats: ["jpg", "png", "webp"]
+  }
+});
+
+const upload = multer({ storage });
+
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.static("public"));
-app.use("/uploads", express.static(path.join(__dirname, "public/uploads")));
 
 // Banco de dados
 const pool = mysql.createPool({
@@ -35,19 +52,18 @@ const pool = mysql.createPool({
 function limpezaAnual() {
   const hoje = new Date();
   const ehPrimeiroDeJaneiro = hoje.getDate() === 1 && hoje.getMonth() === 0;
-
   if (!ehPrimeiroDeJaneiro) return;
 
   const anoAnterior = hoje.getFullYear() - 1;
   const anoAtual = hoje.getFullYear();
 
   pool.query("DELETE FROM agendamentos WHERE YEAR(dia) = ?", [anoAnterior], (err) => {
-    if (err) console.error("❌ Erro ao apagar agendamentos do ano anterior:", err.message);
+    if (err) console.error("❌ Erro ao apagar agendamentos:", err.message);
     else console.log(`🧹 Agendamentos de ${anoAnterior} removidos`);
   });
 
   pool.query("DELETE FROM status_dias WHERE YEAR(dia) = ?", [anoAnterior], (err) => {
-    if (err) console.error("❌ Erro ao apagar status do ano anterior:", err.message);
+    if (err) console.error("❌ Erro ao apagar status:", err.message);
     else console.log(`🧹 Status de ${anoAnterior} removidos`);
   });
 
@@ -72,8 +88,6 @@ function limpezaAnual() {
   console.log(`✅ Limpeza anual executada para ${anoAnterior} e preenchido ${anoAtual}`);
 }
 
-// 📅 Preenche próximos 12 meses com limpeza
-
 // Página principal
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
@@ -88,9 +102,7 @@ app.get("/agendamentos", (req, res) => {
 });
 
 app.post("/agendamentos", (req, res) => {
-  // 👇 Adiciona aqui
   console.log("📥 Dados recebidos:", req.body);
-
   const { nome, horario, dia, dia_todo } = req.body;
   if (!nome || !horario || !dia) {
     return res.status(400).json({ erro: "Campos obrigatórios ausentes." });
@@ -104,7 +116,7 @@ app.post("/agendamentos", (req, res) => {
 
   pool.query(query, [nome, horario, dia, diaTodoFormatado], (err, resultado) => {
     if (err) {
-      console.error("❌ Erro ao inserir agendamento:", err.message); // 👈 E esse também ajuda
+      console.error("❌ Erro ao inserir agendamento:", err.message);
       return res.status(500).json({ erro: err.message });
     }
     res.json({ sucesso: true, id: resultado.insertId });
@@ -132,16 +144,6 @@ app.get("/status-dia", (req, res) => {
 });
 
 // 🛍️ COMÉRCIOS
-const storage = multer.diskStorage({
-  destination: "public/uploads/",
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const name = Date.now() + "-" + file.fieldname + ext;
-    cb(null, name);
-  },
-});
-const upload = multer({ storage });
-
 app.post("/comercios", upload.fields([
   { name: "logo", maxCount: 1 },
   { name: "fotos[]", maxCount: 10 }
@@ -157,11 +159,11 @@ app.post("/comercios", upload.fields([
   } = req.body;
 
   const logoUrl = req.files["logo"]
-    ? `/uploads/${req.files["logo"][0].filename}`
+    ? req.files["logo"][0].path
     : null;
 
   const fotos = req.files["fotos[]"]
-    ? req.files["fotos[]"].map(file => `/uploads/${file.filename}`)
+    ? req.files["fotos[]"].map(file => file.path)
     : [];
 
   const query = `
@@ -212,7 +214,7 @@ io.on("connection", (socket) => {
         if (err) return console.error("❌ Erro ao remover status:", err.message);
         console.log(`✅ Status removido do dia ${dia}`);
 
-                pool.query("DELETE FROM agendamentos WHERE dia = ?", [dia], (err) => {
+        pool.query("DELETE FROM agendamentos WHERE dia = ?", [dia], (err) => {
           if (err) return console.error("❌ Erro ao remover agendamentos:", err.message);
           console.log(`🧹 Agendamentos removidos do dia ${dia}`);
           io.emit("atualizar");
@@ -239,11 +241,8 @@ io.on("connection", (socket) => {
   });
 });
 
-//////////////////////////
 // 🚀 INICIAR SERVIDOR
-//////////////////////////
-
-limpezaAnual(); // Executa limpeza anual se for 01 de janeiro
+limpezaAnual();
 
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
