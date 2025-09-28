@@ -240,7 +240,7 @@ function abrirFormulario(e, o, t, a) {
         <span class="texto-dia-todo">Reservar o dia todo</span>
       </div>
       <p id="avisoDiaTodo" style="color: red; display: none; margin-top: 8px;">
-        Atenção: selecione esta opção apenas se realmente for utilizar o dia inteiro, que corresponde ao período das 09:00 às 22:00.
+        Atenção: selecione esta opção apenas se realmente for utilizar o dia inteiro, que corresponde ao período das 09:00 às 22:00. Caso contrário, defina hora e Inicio e Término.
       </p>
       <button type="submit">Agendar</button>
     </form>
