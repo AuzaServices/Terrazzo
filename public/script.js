@@ -219,26 +219,60 @@ function abrirFormulario(e, o, t, a) {
     const n = feriadosBloqueados(a).some((e => e.dia === o && e.mes === t)),
         r = new Date(a, 0, 1);
     if (n && hoje < r) return void alert("🚫 Esse feriado do ano seguinte só poderá ser reservado após o dia 1º de Janeiro para garantir justiça a todos.");
+
     const s = document.createElement("div");
     s.className = "modal-overlay";
+
     const i = document.createElement("div");
-    i.className = "modal-content", i.innerHTML = '\n    <button class="fechar">X</button>\n    <form class="form-inline">\n      <input type="text" placeholder="Nome" required />\n      <div class="hora-bloco">\n        <label>Início:</label>\n        <input type="time" class="hora-inicio" required />\n        <label>Término:</label>\n        <input type="time" class="hora-fim" required />\n      </div>\n      <div class="checkbox-wrapper">\n        <input type="checkbox" id="diaTodo" />\n        <span class="texto-dia-todo">Reservar o dia todo</span>\n      </div>\n      <button type="submit">Agendar</button>\n    </form>\n  ', i.querySelector(".fechar").onclick = () => document.body.removeChild(s);
+    i.className = "modal-content";
+    i.innerHTML = `
+    <button class="fechar">X</button>
+    <form class="form-inline">
+      <input type="text" placeholder="Nome" required />
+      <div class="hora-bloco">
+        <label>Início:</label>
+        <input type="time" class="hora-inicio" required />
+        <label>Término:</label>
+        <input type="time" class="hora-fim" required />
+      </div>
+      <div class="checkbox-wrapper">
+        <input type="checkbox" id="diaTodo" />
+        <span class="texto-dia-todo">Reservar o dia todo</span>
+      </div>
+      <p id="avisoDiaTodo" style="color: red; display: none; font-weight: bold; margin-top: 8px;">
+        Atenção: selecione esta opção apenas se realmente utilizar o dia inteiro, que corresponde ao período das 09:00 às 22:00.
+      </p>
+      <button type="submit">Agendar</button>
+    </form>
+  `;
+    i.querySelector(".fechar").onclick = () => document.body.removeChild(s);
+
     const d = i.querySelector("form"),
         c = i.querySelector("#diaTodo"),
         l = i.querySelector(".hora-inicio"),
-        m = i.querySelector(".hora-fim");
+        m = i.querySelector(".hora-fim"),
+        aviso = i.querySelector("#avisoDiaTodo");
+
     c.onchange = () => {
         const e = c.checked;
-        l.disabled = e, m.disabled = e, l.style.opacity = e ? "0.5" : "1", m.style.opacity = e ? "0.5" : "1"
-    }, d.onsubmit = e => {
+        l.disabled = e;
+        m.disabled = e;
+        l.style.opacity = e ? "0.5" : "1";
+        m.style.opacity = e ? "0.5" : "1";
+        aviso.style.display = e ? "block" : "none";
+    };
+
+    d.onsubmit = e => {
         e.preventDefault();
         const n = d.querySelector("input[type='text']").value.trim(),
             r = l.value,
             i = m.value,
             u = c.checked;
-        if (!n || !u && r >= i) return void alert("Preencha todos os campos corretamente e verifique os horários.");
+        if (!n || (!u && r >= i)) return void alert("Preencha todos os campos corretamente e verifique os horários.");
+
         const p = u ? "Dia inteiro" : `${r} - ${i}`,
             h = new Date(a, t, o).toISOString().split("T")[0];
+
         fetch("https://terrazzo-6lae.onrender.com/agendamentos", {
             method: "POST",
             headers: {
@@ -252,13 +286,18 @@ function abrirFormulario(e, o, t, a) {
             })
         }).then((e => {
             if (!e.ok) throw new Error(`Erro ${e.status} ao enviar agendamento`);
-            return e.json()
-        })).then((() => {
-            document.body.removeChild(s), socket.emit("atualizar")
-        })).catch((e => {
-            alert("Erro ao agendar. Tente novamente."), console.error("⚠️ Falha no envio:", e.message)
-        }))
-    }, s.appendChild(i), document.body.appendChild(s)
+            return e.json();
+        })).then(() => {
+            document.body.removeChild(s);
+            socket.emit("atualizar");
+        }).catch((e => {
+            alert("Erro ao agendar. Tente novamente.");
+            console.error("⚠️ Falha no envio:", e.message);
+        }));
+    };
+
+    s.appendChild(i);
+    document.body.appendChild(s);
 }
 btnAnterior.onclick = () => {
     mesAtual = 0 === mesAtual ? 11 : mesAtual - 1, anoAtual = 11 === mesAtual ? anoAtual - 1 : anoAtual, carregarAgendamentosDoBanco()
