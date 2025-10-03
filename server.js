@@ -87,6 +87,29 @@ function limpezaAnual() {
   console.log(`✅ Limpeza anual executada para ${anoAnterior} e preenchido ${anoAtual}`);
 }
 
+// 🧹 Limpeza mensal automática
+function limpezaMensal() {
+  const hoje = new Date();
+  const mesAtual = hoje.getMonth(); // Outubro = 9
+  const anoAtual = hoje.getFullYear();
+
+  const mesAnterior = mesAtual === 0 ? 11 : mesAtual - 1;
+  const anoDoMesAnterior = mesAtual === 0 ? anoAtual - 1 : anoAtual;
+
+  const inicio = `${anoDoMesAnterior}-${mesAnterior + 1}-01`;
+  const fim = `${anoDoMesAnterior}-${mesAnterior + 1}-31`;
+
+  pool.query("DELETE FROM agendamentos WHERE dia BETWEEN ? AND ?", [inicio, fim], (err) => {
+    if (err) console.error("❌ Erro ao apagar agendamentos do mês anterior:", err.message);
+    else console.log(`🧹 Agendamentos de ${mesAnterior + 1}/${anoDoMesAnterior} removidos`);
+  });
+
+  pool.query("DELETE FROM status_dias WHERE dia BETWEEN ? AND ?", [inicio, fim], (err) => {
+    if (err) console.error("❌ Erro ao apagar status do mês anterior:", err.message);
+    else console.log(`🧹 Status de ${mesAnterior + 1}/${anoDoMesAnterior} removidos`);
+  });
+}
+
 // Página principal
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
@@ -105,6 +128,15 @@ app.post("/agendamentos", (req, res) => {
   const { nome, horario, dia, dia_todo } = req.body;
   if (!nome || !horario || !dia) {
     return res.status(400).json({ erro: "Campos obrigatórios ausentes." });
+  }
+
+  const hoje = new Date();
+  const dataAgendada = new Date(dia);
+  if (
+    dataAgendada.getFullYear() < hoje.getFullYear() ||
+    (dataAgendada.getFullYear() === hoje.getFullYear() && dataAgendada.getMonth() < hoje.getMonth())
+  ) {
+    return res.status(403).json({ erro: "Não é permitido agendar meses anteriores ao atual." });
   }
 
   const diaTodoFormatado = dia_todo ? 1 : 0;
@@ -141,7 +173,6 @@ app.get("/status-dia", (req, res) => {
     res.json(resultados);
   });
 });
-
 
 // 📡 WEBSOCKET
 io.on("connection", (socket) => {
@@ -184,6 +215,7 @@ io.on("connection", (socket) => {
 
 // 🚀 INICIAR SERVIDOR
 limpezaAnual();
+limpezaMensal();
 
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);

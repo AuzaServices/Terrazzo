@@ -102,13 +102,20 @@ function criarCalendario(mes, ano) {
         // ✅ Exibe visual de limpeza se for quarta ou quinta e não estiver liberado
 
         // ✅ Exibe botão "+" se o dia estiver liberado
-        if (totalAgendados < 3 && !temDiaTodo && !ehFeriado && !ehBloqueado && !ehDiaLimpeza) {
-            const botao = document.createElement("button");
-            botao.className = "btn-plus";
-            botao.innerText = "+";
-            botao.onclick = () => abrirFormulario(chave, dia, mes, ano);
-            elementoDia.appendChild(botao);
-        }
+if (
+  totalAgendados < 3 &&
+  !temDiaTodo &&
+  !ehFeriado &&
+  !ehBloqueado &&
+  !ehDiaLimpeza &&
+  (ano > hoje.getFullYear() || (ano === hoje.getFullYear() && mes >= hoje.getMonth()))
+) {
+  const botao = document.createElement("button");
+  botao.className = "btn-plus";
+  botao.innerText = "+";
+  botao.onclick = () => abrirFormulario(chave, dia, mes, ano);
+  elementoDia.appendChild(botao);
+}
 
         agendados.forEach((a) => {
             const agendamentoEl = document.createElement("div");
