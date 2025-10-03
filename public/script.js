@@ -59,6 +59,16 @@ function carregarAgendamentosDoBanco(e = 0) {
         console.error("Erro ao carregar dados:", e.message), calendar.innerHTML = '<p class="erro-calendario">🚫 Erro ao carregar dados. Tente atualizar a página.</p>'
     }))
 }
+
+function anoEstaLiberado(ano) {
+    const hoje = new Date();
+    const anoAtual = hoje.getFullYear();
+    const mesAtual = hoje.getMonth(); // Outubro = 9
+
+    // Ex: 2027 só libera em outubro de 2026
+    return ano <= anoAtual + 1 || (ano === anoAtual + 2 && mesAtual >= 9);
+}
+
 const limpezaRegistrada = {};
 function criarCalendario(mes, ano) {
     calendar.innerHTML = "";
@@ -102,8 +112,7 @@ function criarCalendario(mes, ano) {
         // ✅ Exibe visual de limpeza se for quarta ou quinta e não estiver liberado
 
         // ✅ Exibe botão "+" se o dia estiver liberado
-const anoLiberado = ano <= hoje.getFullYear() + 1 || 
-  (ano === hoje.getFullYear() + 2 && hoje.getMonth() >= 9); // mês 9 = outubro
+const anoLiberado = anoEstaLiberado(ano); // mês 9 = outubro
 
 if (
   totalAgendados < 3 &&
