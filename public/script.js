@@ -61,12 +61,10 @@ function carregarAgendamentosDoBanco(e = 0) {
 }
 
 function anoEstaLiberado(ano) {
-    const hoje = new Date();
-    const anoAtual = hoje.getFullYear();
-    const mesAtual = hoje.getMonth(); // Outubro = 9
-
-    // Ex: 2027 só libera em outubro de 2026
-    return ano <= anoAtual + 1 || (ano === anoAtual + 2 && mesAtual >= 9);
+  const hoje = new Date();
+  const anoAnterior = ano - 1;
+  const liberacao = new Date(anoAnterior, 9, 1); // 1º de outubro do ano anterior
+  return hoje >= liberacao;
 }
 
 const limpezaRegistrada = {};
@@ -120,8 +118,7 @@ if (
   !ehFeriado &&
   !ehBloqueado &&
   !ehDiaLimpeza &&
-  (ano > hoje.getFullYear() || (ano === hoje.getFullYear() && mes >= hoje.getMonth())) &&
-  anoLiberado
+  anoEstaLiberado(ano)
 ) {
   const botao = document.createElement("button");
   botao.className = "btn-plus";
