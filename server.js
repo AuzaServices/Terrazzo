@@ -191,40 +191,11 @@ io.on("connection", (socket) => {
   });
 });
 
-function bloquearAnosFuturos() {
-  const hoje = new Date();
-  const anoAtual = hoje.getFullYear();
-  const mesAtual = hoje.getMonth(); // Outubro = 9
-
-  const anoLimite = 2030; // você pode ajustar esse limite conforme necessário
-
-  for (let ano = anoAtual + 1; ano <= anoLimite; ano++) {
-    const liberarEmOutubro = new Date(ano - 1, 9, 1); // 1º de outubro do ano anterior
-
-    if (hoje < liberarEmOutubro) {
-      for (let mes = 0; mes < 12; mes++) {
-        const diasNoMes = new Date(ano, mes + 1, 0).getDate();
-        for (let dia = 1; dia <= diasNoMes; dia++) {
-          const diaFormatado = `${ano}-${mes + 1}-${dia}`;
-          pool.query(
-            `INSERT IGNORE INTO status_dias (dia, status) VALUES (?, ?)`,
-            [diaFormatado, "bloqueado"],
-            (err) => {
-              if (err) console.error(`❌ Erro ao bloquear ${diaFormatado}:`, err.message);
-            }
-          );
-        }
-      }
-      console.log(`🚫 Ano ${ano} bloqueado até 01/10/${ano - 1}`);
-    }
-  }
-}
 
 // 🚀 INICIAR SERVIDOR
 limpezaAnual();
 limpezaMensal();
 preencherLimpezaAte2026();
-bloquearAnosFuturos();
 
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);

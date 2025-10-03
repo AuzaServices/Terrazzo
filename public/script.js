@@ -102,17 +102,13 @@ function criarCalendario(mes, ano) {
         // ✅ Exibe visual de limpeza se for quarta ou quinta e não estiver liberado
 
         // ✅ Exibe botão "+" se o dia estiver liberado
-const anoLiberado = ano <= hoje.getFullYear() + 1 || 
-  (ano === hoje.getFullYear() + 2 && hoje.getMonth() >= 9); // mês 9 = outubro
-
 if (
   totalAgendados < 3 &&
   !temDiaTodo &&
   !ehFeriado &&
   !ehBloqueado &&
   !ehDiaLimpeza &&
-  (ano > hoje.getFullYear() || (ano === hoje.getFullYear() && mes >= hoje.getMonth())) &&
-  anoLiberado
+  (ano > hoje.getFullYear() || (ano === hoje.getFullYear() && mes >= hoje.getMonth()))
 ) {
   const botao = document.createElement("button");
   botao.className = "btn-plus";
