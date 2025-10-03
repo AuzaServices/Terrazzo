@@ -220,6 +220,7 @@ io.on("connection", (socket) => {
 // 🚀 INICIAR SERVIDOR
 limpezaAnual();
 limpezaMensal();
+preencherLimpezaAte2026();
 
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
