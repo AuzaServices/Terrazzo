@@ -30,7 +30,6 @@ const storage = new CloudinaryStorage({
 
 const upload = multer({ storage });
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.static("public"));
@@ -56,15 +55,8 @@ function limpezaAnual() {
   const anoAnterior = hoje.getFullYear() - 1;
   const anoAtual = hoje.getFullYear();
 
-  pool.query("DELETE FROM agendamentos WHERE YEAR(dia) = ?", [anoAnterior], (err) => {
-    if (err) console.error("❌ Erro ao apagar agendamentos:", err.message);
-    else console.log(`🧹 Agendamentos de ${anoAnterior} removidos`);
-  });
-
-  pool.query("DELETE FROM status_dias WHERE YEAR(dia) = ?", [anoAnterior], (err) => {
-    if (err) console.error("❌ Erro ao apagar status:", err.message);
-    else console.log(`🧹 Status de ${anoAnterior} removidos`);
-  });
+  pool.query("DELETE FROM agendamentos WHERE YEAR(dia) = ?", [anoAnterior]);
+  pool.query("DELETE FROM status_dias WHERE YEAR(dia) = ?", [anoAnterior]);
 
   for (let mes = 0; mes < 12; mes++) {
     const diasNoMes = new Date(anoAtual, mes + 1, 0).getDate();
@@ -75,43 +67,50 @@ function limpezaAnual() {
         const diaFormatado = `${anoAtual}-${mes + 1}-${dia}`;
         pool.query(
           `INSERT IGNORE INTO status_dias (dia, status) VALUES (?, ?)`,
-          [diaFormatado, "limpeza"],
-          (err) => {
-            if (err) console.error("❌ Erro ao registrar limpeza:", err.message);
-          }
+          [diaFormatado, "limpeza"]
         );
       }
     }
   }
-
-  console.log(`✅ Limpeza anual executada para ${anoAnterior} e preenchido ${anoAtual}`);
 }
 
-// 🧹 Limpeza de todos os meses anteriores ao atual
+// 🧹 Limpeza de meses anteriores ao atual
 function limpezaMensal() {
   const hoje = new Date();
   const mesAtual = hoje.getMonth() + 1;
   const anoAtual = hoje.getFullYear();
 
-  const queryAgendamentos = `
-    DELETE FROM agendamentos
-    WHERE (YEAR(dia) < ?)
-       OR (YEAR(dia) = ? AND MONTH(dia) < ?)
-  `;
-  pool.query(queryAgendamentos, [anoAtual, anoAtual, mesAtual], (err) => {
-    if (err) console.error("❌ Erro ao apagar agendamentos antigos:", err.message);
-    else console.log(`🧹 Agendamentos anteriores a ${mesAtual}/${anoAtual} removidos`);
-  });
+  pool.query(
+    `DELETE FROM agendamentos WHERE (YEAR(dia) < ?) OR (YEAR(dia) = ? AND MONTH(dia) < ?)`,
+    [anoAtual, anoAtual, mesAtual]
+  );
+  pool.query(
+    `DELETE FROM status_dias WHERE (YEAR(dia) < ?) OR (YEAR(dia) = ? AND MONTH(dia) < ?)`,
+    [anoAtual, anoAtual, mesAtual]
+  );
+}
 
-  const queryStatus = `
-    DELETE FROM status_dias
-    WHERE (YEAR(dia) < ?)
-       OR (YEAR(dia) = ? AND MONTH(dia) < ?)
-  `;
-  pool.query(queryStatus, [anoAtual, anoAtual, mesAtual], (err) => {
-    if (err) console.error("❌ Erro ao apagar status antigos:", err.message);
-    else console.log(`🧹 Status anteriores a ${mesAtual}/${anoAtual} removidos`);
-  });
+// ✅ Preenche quartas e quintas até dezembro de 2026
+function preencherLimpezaAte2026() {
+  const hoje = new Date();
+  const anoFinal = 2026;
+
+  for (let ano = hoje.getFullYear(); ano <= anoFinal; ano++) {
+    for (let mes = 0; mes < 12; mes++) {
+      const diasNoMes = new Date(ano, mes + 1, 0).getDate();
+      for (let dia = 1; dia <= diasNoMes; dia++) {
+        const data = new Date(ano, mes, dia);
+        const diaSemana = data.getDay();
+        if (diaSemana === 3 || diaSemana === 4) {
+          const diaFormatado = `${ano}-${mes + 1}-${dia}`;
+          pool.query(
+            `INSERT IGNORE INTO status_dias (dia, status) VALUES (?, ?)`,
+            [diaFormatado, "limpeza"]
+          );
+        }
+      }
+    }
+  }
 }
 
 // Página principal
@@ -128,7 +127,6 @@ app.get("/agendamentos", (req, res) => {
 });
 
 app.post("/agendamentos", (req, res) => {
-  console.log("📥 Dados recebidos:", req.body);
   const { nome, horario, dia, dia_todo } = req.body;
   if (!nome || !horario || !dia) {
     return res.status(400).json({ erro: "Campos obrigatórios ausentes." });
@@ -144,19 +142,15 @@ app.post("/agendamentos", (req, res) => {
   }
 
   const diaTodoFormatado = dia_todo ? 1 : 0;
-  const query = `
-    INSERT INTO agendamentos (nome, horario, dia, dia_todo)
-    VALUES (?, ?, ?, ?)
-  `;
-
-  pool.query(query, [nome, horario, dia, diaTodoFormatado], (err, resultado) => {
-    if (err) {
-      console.error("❌ Erro ao inserir agendamento:", err.message);
-      return res.status(500).json({ erro: err.message });
+  pool.query(
+    `INSERT INTO agendamentos (nome, horario, dia, dia_todo) VALUES (?, ?, ?, ?)`,
+    [nome, horario, dia, diaTodoFormatado],
+    (err, resultado) => {
+      if (err) return res.status(500).json({ erro: err.message });
+      res.json({ sucesso: true, id: resultado.insertId });
+      io.emit("atualizar");
     }
-    res.json({ sucesso: true, id: resultado.insertId });
-    io.emit("atualizar");
-  });
+  );
 });
 
 app.delete("/agendamentos/:id", (req, res) => {
@@ -180,40 +174,20 @@ app.get("/status-dia", (req, res) => {
 
 // 📡 WEBSOCKET
 io.on("connection", (socket) => {
-  console.log("📡 Cliente conectado");
-
   socket.on("status-dia", ({ dia, status }) => {
     if (!dia) return;
 
     if (status === "livre") {
-      pool.query("DELETE FROM status_dias WHERE dia = ?", [dia], (err) => {
-        if (err) return console.error("❌ Erro ao remover status:", err.message);
-        console.log(`✅ Status removido do dia ${dia}`);
-
-        pool.query("DELETE FROM agendamentos WHERE dia = ?", [dia], (err) => {
-          if (err) return console.error("❌ Erro ao remover agendamentos:", err.message);
-          console.log(`🧹 Agendamentos removidos do dia ${dia}`);
-          io.emit("atualizar");
-        });
-      });
+      pool.query("DELETE FROM status_dias WHERE dia = ?", [dia]);
+      pool.query("DELETE FROM agendamentos WHERE dia = ?", [dia]);
+      io.emit("atualizar");
     } else if (["manutencao", "bloqueado", "limpeza"].includes(status)) {
-      const query = `
-        INSERT INTO status_dias (dia, status)
-        VALUES (?, ?)
-        ON DUPLICATE KEY UPDATE status = VALUES(status)
-      `;
-      pool.query(query, [dia, status], (err) => {
-        if (err) return console.error("❌ Erro ao salvar status:", err.message);
-        console.log(`⚙️ Status "${status}" aplicado ao dia ${dia}`);
-        io.emit("atualizar");
-      });
-    } else {
-      console.warn(`⚠️ Status inválido recebido: "${status}"`);
+      pool.query(
+        `INSERT INTO status_dias (dia, status) VALUES (?, ?) ON DUPLICATE KEY UPDATE status = VALUES(status)`,
+        [dia, status]
+      );
+      io.emit("atualizar");
     }
-  });
-
-  socket.on("disconnect", () => {
-    console.log("👋 Cliente desconectado");
   });
 });
 
