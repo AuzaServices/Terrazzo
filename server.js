@@ -87,49 +87,30 @@ function limpezaAnual() {
   console.log(`✅ Limpeza anual executada para ${anoAnterior} e preenchido ${anoAtual}`);
 }
 
-// 🧹 Limpeza mensal automática
+// 🧹 Limpeza de todos os meses anteriores ao atual
 function limpezaMensal() {
   const hoje = new Date();
-  const mesAtual = hoje.getMonth(); // Outubro = 9
+  const mesAtual = hoje.getMonth() + 1;
   const anoAtual = hoje.getFullYear();
 
-  // Remove todos os agendamentos e status de meses anteriores ao atual
-  pool.query("SELECT dia FROM agendamentos", (err, resultados) => {
-    if (err) return console.error("❌ Erro ao buscar agendamentos:", err.message);
-
-    const diasParaRemover = resultados
-      .map(r => new Date(r.dia))
-      .filter(data => 
-        data.getFullYear() < anoAtual || 
-        (data.getFullYear() === anoAtual && data.getMonth() < mesAtual)
-      )
-      .map(data => data.toISOString().split("T")[0]);
-
-    if (diasParaRemover.length > 0) {
-      pool.query("DELETE FROM agendamentos WHERE dia IN (?)", [diasParaRemover], (err) => {
-        if (err) console.error("❌ Erro ao apagar agendamentos antigos:", err.message);
-        else console.log(`🧹 Agendamentos anteriores a ${mesAtual + 1}/${anoAtual} removidos`);
-      });
-    }
+  const queryAgendamentos = `
+    DELETE FROM agendamentos
+    WHERE (YEAR(dia) < ?)
+       OR (YEAR(dia) = ? AND MONTH(dia) < ?)
+  `;
+  pool.query(queryAgendamentos, [anoAtual, anoAtual, mesAtual], (err) => {
+    if (err) console.error("❌ Erro ao apagar agendamentos antigos:", err.message);
+    else console.log(`🧹 Agendamentos anteriores a ${mesAtual}/${anoAtual} removidos`);
   });
 
-  pool.query("SELECT dia FROM status_dias", (err, resultados) => {
-    if (err) return console.error("❌ Erro ao buscar status:", err.message);
-
-    const diasParaRemover = resultados
-      .map(r => new Date(r.dia))
-      .filter(data => 
-        data.getFullYear() < anoAtual || 
-        (data.getFullYear() === anoAtual && data.getMonth() < mesAtual)
-      )
-      .map(data => data.toISOString().split("T")[0]);
-
-    if (diasParaRemover.length > 0) {
-      pool.query("DELETE FROM status_dias WHERE dia IN (?)", [diasParaRemover], (err) => {
-        if (err) console.error("❌ Erro ao apagar status antigos:", err.message);
-        else console.log(`🧹 Status anteriores a ${mesAtual + 1}/${anoAtual} removidos`);
-      });
-    }
+  const queryStatus = `
+    DELETE FROM status_dias
+    WHERE (YEAR(dia) < ?)
+       OR (YEAR(dia) = ? AND MONTH(dia) < ?)
+  `;
+  pool.query(queryStatus, [anoAtual, anoAtual, mesAtual], (err) => {
+    if (err) console.error("❌ Erro ao apagar status antigos:", err.message);
+    else console.log(`🧹 Status anteriores a ${mesAtual}/${anoAtual} removidos`);
   });
 }
 
