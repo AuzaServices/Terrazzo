@@ -232,125 +232,139 @@ function aplicarStatusDia(e, o) {
     }
 }
 
-function abrirFormulario(e, o, t, a) {
-    const n = feriadosBloqueados(a).some((e => e.dia === o && e.mes === t)),
-        r = new Date(a, 0, 1);
-    if (n && hoje < r) return void alert("🚫 Esse feriado do ano seguinte só poderá ser reservado após o dia 1º de Janeiro para garantir justiça a todos.");
-
-    const s = document.createElement("div");
-    s.className = "modal-overlay";
-
-    const i = document.createElement("div");
-    i.className = "modal-content";
-    i.innerHTML = `
-    <button class="fechar">X</button>
-    <form class="form-inline">
-      <input type="text" placeholder="Nome" required />
-      <div class="hora-bloco">
-        <label>Início:</label>
-        <input type="time" class="hora-inicio" required />
-        <label>Término:</label>
-        <input type="time" class="hora-fim" required />
-      </div>
-      <div class="checkbox-wrapper">
-        <input type="checkbox" id="diaTodo" />
-        <span class="texto-dia-todo">Reservar o dia todo</span>
-      </div>
-      <p id="avisoDiaTodo" style="color: red; display: none; margin-top: 8px;">
-        Atenção: selecione esta opção apenas se realmente for utilizar o dia inteiro, que corresponde ao período das 09:00 às 22:00. Caso contrário, defina hora de Inicio e Término.
-      </p>
-      <p id="avisoErro" style="color: red; display: none; margin-top: 8px;"></p>
-      <button type="submit">Agendar</button>
-    </form>
-  `;
-    i.querySelector(".fechar").onclick = () => document.body.removeChild(s);
-
-    const d = i.querySelector("form"),
-        c = i.querySelector("#diaTodo"),
-        l = i.querySelector(".hora-inicio"),
-        m = i.querySelector(".hora-fim"),
-        aviso = i.querySelector("#avisoDiaTodo");
-
-c.onchange = () => {
-    const marcado = c.checked;
-    l.disabled = marcado;
-    m.disabled = marcado;
-    l.style.opacity = marcado ? "0.5" : "1";
-    m.style.opacity = marcado ? "0.5" : "1";
-    aviso.style.display = marcado ? "block" : "none";
-};
-
-// ✅ Força atualização visual ao abrir
-c.dispatchEvent(new Event("change"));
-
-   d.onsubmit = e => {
-    e.preventDefault();
-    const nome = d.querySelector("input[type='text']").value.trim(),
-          inicio = l.value,
-          fim = m.value,
-          diaTodo = c.checked;
-
-    if (!nome || (!diaTodo && inicio >= fim)) {
-        alert("Preencha todos os campos corretamente e verifique os horários.");
+function abrirFormulario(chave, dia, mes, ano) {
+    const ehFeriado = feriadosBloqueados(ano).some(f => f.dia === dia && f.mes === mes);
+    const limite = new Date(ano, 0, 1);
+    if (ehFeriado && hoje < limite) {
+        alert("🚫 Esse feriado do ano seguinte só poderá ser reservado após o dia 1º de Janeiro para garantir justiça a todos.");
         return;
     }
 
-    const chave = `${o}-${t}-${a}`;
-    const agendados = agendamentos[chave] || [];
+    const modal = document.createElement("div");
+    modal.className = "modal-overlay";
 
-    // 🔍 Verifica conflitos de horário
-    if (!diaTodo) {
-        const novoInicio = parseInt(inicio.replace(":", ""), 10);
-        const novoFim = parseInt(fim.replace(":", ""), 10);
+    const conteudo = document.createElement("div");
+    conteudo.className = "modal-content";
+    conteudo.innerHTML = `
+        <button class="fechar">X</button>
+        <form class="form-inline">
+            <input type="text" placeholder="Nome" required />
+            <div class="hora-bloco">
+                <label>Início:</label>
+                <input type="time" class="hora-inicio" required />
+                <label>Término:</label>
+                <input type="time" class="hora-fim" required />
+            </div>
+            <div class="checkbox-wrapper">
+                <input type="checkbox" id="diaTodo" />
+                <span class="texto-dia-todo">Reservar o dia todo</span>
+            </div>
+            <p id="avisoDiaTodo" style="color: red; display: none; margin-top: 8px;">
+                Atenção: selecione esta opção apenas se realmente for utilizar o dia inteiro, que corresponde ao período das 09:00 às 22:00. Caso contrário, defina hora de Início e Término.
+            </p>
+            <p id="avisoErro" style="color: red; display: none; margin-top: 8px;"></p>
+            <button type="submit">Agendar</button>
+        </form>
+    `;
 
-        const conflito = agendados.some(a => {
-            if (a.diaTodo) return true; // dia todo bloqueia tudo
-            const [ini, fim] = a.horario.split(" - ").map(h => parseInt(h.replace(":", ""), 10));
-            return !(novoFim <= ini || novoInicio >= fim); // sobreposição
+    conteudo.querySelector(".fechar").onclick = () => document.body.removeChild(modal);
+
+    const form = conteudo.querySelector("form"),
+          checkbox = conteudo.querySelector("#diaTodo"),
+          inputInicio = conteudo.querySelector(".hora-inicio"),
+          inputFim = conteudo.querySelector(".hora-fim"),
+          avisoDiaTodo = conteudo.querySelector("#avisoDiaTodo"),
+          avisoErro = conteudo.querySelector("#avisoErro");
+
+    checkbox.onchange = () => {
+        const marcado = checkbox.checked;
+        inputInicio.disabled = marcado;
+        inputFim.disabled = marcado;
+        inputInicio.style.opacity = marcado ? "0.5" : "1";
+        inputFim.style.opacity = marcado ? "0.5" : "1";
+
+        const agendados = agendamentos[chave] || [];
+
+        if (marcado) {
+            if (agendados.length > 0) {
+                avisoDiaTodo.style.display = "none";
+                avisoErro.textContent = "Já existem agendamentos neste dia. Não é possível reservar o dia todo.";
+                avisoErro.style.display = "block";
+            } else {
+                avisoErro.style.display = "none";
+                avisoDiaTodo.style.display = "block";
+            }
+        } else {
+            avisoDiaTodo.style.display = "none";
+            avisoErro.style.display = "none";
+        }
+    };
+
+    form.onsubmit = e => {
+        e.preventDefault();
+        const nome = form.querySelector("input[type='text']").value.trim(),
+              inicio = inputInicio.value,
+              fim = inputFim.value,
+              diaTodo = checkbox.checked;
+
+        if (!nome || (!diaTodo && inicio >= fim)) {
+            avisoErro.textContent = "Preencha todos os campos corretamente e verifique os horários.";
+            avisoErro.style.display = "block";
+            return;
+        }
+
+        const agendados = agendamentos[chave] || [];
+
+        if (!diaTodo) {
+            const novoInicio = parseInt(inicio.replace(":", ""), 10);
+            const novoFim = parseInt(fim.replace(":", ""), 10);
+
+            const conflito = agendados.some(a => {
+                if (a.diaTodo) return true;
+                const [ini, fim] = a.horario.split(" - ").map(h => parseInt(h.replace(":", ""), 10));
+                return !(novoFim <= ini || novoInicio >= fim);
+            });
+
+            if (conflito) {
+                avisoErro.textContent = "Conflito de horário com outro agendamento. Escolha outro período.";
+                avisoErro.style.display = "block";
+                return;
+            }
+        } else {
+            if (agendados.length > 0) {
+                avisoErro.textContent = "Já existem agendamentos neste dia. Não é possível reservar o dia todo.";
+                avisoErro.style.display = "block";
+                return;
+            }
+        }
+
+        const horarioFinal = diaTodo ? "Dia inteiro" : `${inicio} - ${fim}`;
+        const dataFormatada = new Date(ano, mes, dia).toISOString().split("T")[0];
+
+        fetch("https://terrazzo-6lae.onrender.com/agendamentos", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                nome,
+                horario: horarioFinal,
+                dia: dataFormatada,
+                dia_todo: diaTodo
+            })
+        }).then(res => {
+            if (!res.ok) throw new Error(`Erro ${res.status} ao enviar agendamento`);
+            return res.json();
+        }).then(() => {
+            document.body.removeChild(modal);
+            socket.emit("atualizar");
+        }).catch(err => {
+            avisoErro.textContent = "🚫 Erro ao agendar. Tente novamente.";
+            avisoErro.style.display = "block";
+            console.error("⚠️ Falha no envio:", err.message);
         });
+    };
 
-const erro = i.querySelector("#avisoErro");
-
-if (conflito) {
-    erro.textContent = "Conflito de horário com outro agendamento. Escolha outro período.";
-    erro.style.display = "block";
-    return;
-}
-} else {
-    const conflito = agendados.length > 0;
-    if (conflito) {
-        erro.textContent = "Já existem agendamentos neste dia. Não é possível reservar o dia todo.";
-        erro.style.display = "block";
-        return;
-    }
-}
-
-    const horarioFinal = diaTodo ? "Dia inteiro" : `${inicio} - ${fim}`;
-    const dataFormatada = new Date(a, t, o).toISOString().split("T")[0];
-
-    fetch("https://terrazzo-6lae.onrender.com/agendamentos", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            nome,
-            horario: horarioFinal,
-            dia: dataFormatada,
-            dia_todo: diaTodo
-        })
-    }).then(res => {
-        if (!res.ok) throw new Error(`Erro ${res.status} ao enviar agendamento`);
-        return res.json();
-    }).then(() => {
-        document.body.removeChild(s);
-        socket.emit("atualizar");
-    }).catch(err => {
-        alert("Erro ao agendar. Tente novamente.");
-        console.error("⚠️ Falha no envio:", err.message);
-    });
-};
-
-    s.appendChild(i);
-    document.body.appendChild(s);
+    modal.appendChild(conteudo);
+    document.body.appendChild(modal);
 }
 btnAnterior.onclick = () => {
     mesAtual = 0 === mesAtual ? 11 : mesAtual - 1, anoAtual = 11 === mesAtual ? anoAtual - 1 : anoAtual, carregarAgendamentosDoBanco()
