@@ -270,48 +270,67 @@ function abrirFormulario(e, o, t, a) {
         m = i.querySelector(".hora-fim"),
         aviso = i.querySelector("#avisoDiaTodo");
 
-    c.onchange = () => {
-        const e = c.checked;
-        l.disabled = e;
-        m.disabled = e;
-        l.style.opacity = e ? "0.5" : "1";
-        m.style.opacity = e ? "0.5" : "1";
-        aviso.style.display = e ? "block" : "none";
-    };
+d.onsubmit = e => {
+    e.preventDefault();
+    const nome = d.querySelector("input[type='text']").value.trim(),
+          inicio = l.value,
+          fim = m.value,
+          diaTodo = c.checked;
 
-    d.onsubmit = e => {
-        e.preventDefault();
-        const n = d.querySelector("input[type='text']").value.trim(),
-            r = l.value,
-            i = m.value,
-            u = c.checked;
-        if (!n || (!u && r >= i)) return void alert("Preencha todos os campos corretamente e verifique os horários.");
+    if (!nome || (!diaTodo && inicio >= fim)) {
+        alert("Preencha todos os campos corretamente e verifique os horários.");
+        return;
+    }
 
-        const p = u ? "Dia inteiro" : `${r} - ${i}`,
-            h = new Date(a, t, o).toISOString().split("T")[0];
+    const chave = `${o}-${t}-${a}`;
+    const agendados = agendamentos[chave] || [];
 
-        fetch("https://terrazzo-6lae.onrender.com/agendamentos", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                nome: n,
-                horario: p,
-                dia: h,
-                dia_todo: u
-            })
-        }).then((e => {
-            if (!e.ok) throw new Error(`Erro ${e.status} ao enviar agendamento`);
-            return e.json();
-        })).then(() => {
-            document.body.removeChild(s);
-            socket.emit("atualizar");
-        }).catch((e => {
-            alert("Erro ao agendar. Tente novamente.");
-            console.error("⚠️ Falha no envio:", e.message);
-        }));
-    };
+    // 🔍 Verifica conflitos de horário
+    if (!diaTodo) {
+        const novoInicio = parseInt(inicio.replace(":", ""), 10);
+        const novoFim = parseInt(fim.replace(":", ""), 10);
+
+        const conflito = agendados.some(a => {
+            if (a.diaTodo) return true; // dia todo bloqueia tudo
+            const [ini, fim] = a.horario.split(" - ").map(h => parseInt(h.replace(":", ""), 10));
+            return !(novoFim <= ini || novoInicio >= fim); // sobreposição
+        });
+
+        if (conflito) {
+            alert("🚫 Conflito de horário com outro agendamento. Escolha outro período.");
+            return;
+        }
+    } else {
+        const conflito = agendados.length > 0;
+        if (conflito) {
+            alert("🚫 Já existem agendamentos neste dia. Não é possível reservar o dia todo.");
+            return;
+        }
+    }
+
+    const horarioFinal = diaTodo ? "Dia inteiro" : `${inicio} - ${fim}`;
+    const dataFormatada = new Date(a, t, o).toISOString().split("T")[0];
+
+    fetch("https://terrazzo-6lae.onrender.com/agendamentos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            nome,
+            horario: horarioFinal,
+            dia: dataFormatada,
+            dia_todo: diaTodo
+        })
+    }).then(res => {
+        if (!res.ok) throw new Error(`Erro ${res.status} ao enviar agendamento`);
+        return res.json();
+    }).then(() => {
+        document.body.removeChild(s);
+        socket.emit("atualizar");
+    }).catch(err => {
+        alert("Erro ao agendar. Tente novamente.");
+        console.error("⚠️ Falha no envio:", err.message);
+    });
+};
 
     s.appendChild(i);
     document.body.appendChild(s);
