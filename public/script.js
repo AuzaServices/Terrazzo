@@ -259,6 +259,7 @@ function abrirFormulario(e, o, t, a) {
       <p id="avisoDiaTodo" style="color: red; display: none; margin-top: 8px;">
         Atenção: selecione esta opção apenas se realmente for utilizar o dia inteiro, que corresponde ao período das 09:00 às 22:00. Caso contrário, defina hora de Inicio e Término.
       </p>
+      <p id="avisoErro" style="color: red; display: none; margin-top: 8px;"></p>
       <button type="submit">Agendar</button>
     </form>
   `;
@@ -270,7 +271,19 @@ function abrirFormulario(e, o, t, a) {
         m = i.querySelector(".hora-fim"),
         aviso = i.querySelector("#avisoDiaTodo");
 
-d.onsubmit = e => {
+c.onchange = () => {
+    const marcado = c.checked;
+    l.disabled = marcado;
+    m.disabled = marcado;
+    l.style.opacity = marcado ? "0.5" : "1";
+    m.style.opacity = marcado ? "0.5" : "1";
+    aviso.style.display = marcado ? "block" : "none";
+};
+
+// ✅ Força atualização visual ao abrir
+c.dispatchEvent(new Event("change"));
+
+   d.onsubmit = e => {
     e.preventDefault();
     const nome = d.querySelector("input[type='text']").value.trim(),
           inicio = l.value,
@@ -296,17 +309,21 @@ d.onsubmit = e => {
             return !(novoFim <= ini || novoInicio >= fim); // sobreposição
         });
 
-        if (conflito) {
-            alert("🚫 Conflito de horário com outro agendamento. Escolha outro período.");
-            return;
-        }
-    } else {
-        const conflito = agendados.length > 0;
-        if (conflito) {
-            alert("🚫 Já existem agendamentos neste dia. Não é possível reservar o dia todo.");
-            return;
-        }
+const erro = i.querySelector("#avisoErro");
+
+if (conflito) {
+    erro.textContent = "Conflito de horário com outro agendamento. Escolha outro período.";
+    erro.style.display = "block";
+    return;
+}
+} else {
+    const conflito = agendados.length > 0;
+    if (conflito) {
+        erro.textContent = "Já existem agendamentos neste dia. Não é possível reservar o dia todo.";
+        erro.style.display = "block";
+        return;
     }
+}
 
     const horarioFinal = diaTodo ? "Dia inteiro" : `${inicio} - ${fim}`;
     const dataFormatada = new Date(a, t, o).toISOString().split("T")[0];
