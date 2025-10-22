@@ -300,68 +300,84 @@ function abrirFormulario(chave, dia, mes, ano) {
         }
     };
 
-    form.onsubmit = e => {
-        e.preventDefault();
-        const nome = form.querySelector("input[type='text']").value.trim(),
-              inicio = inputInicio.value,
-              fim = inputFim.value,
-              diaTodo = checkbox.checked;
+form.onsubmit = e => {
+    e.preventDefault();
 
-        if (!nome || (!diaTodo && inicio >= fim)) {
-            avisoErro.textContent = "Preencha todos os campos corretamente e verifique os horários.";
+    const nome = form.querySelector("input[type='text']").value.trim(),
+          inicio = inputInicio.value,
+          fim = inputFim.value,
+          diaTodo = checkbox.checked;
+
+    if (!nome || (!diaTodo && inicio >= fim)) {
+        avisoErro.textContent = "Preencha todos os campos corretamente e verifique os horários.";
+        avisoErro.style.display = "block";
+        return;
+    }
+
+    const agendados = agendamentos[chave] || [];
+
+    if (!diaTodo) {
+        const novoInicio = parseInt(inicio.replace(":", ""), 10);
+        const novoFim = parseInt(fim.replace(":", ""), 10);
+
+        // ⏰ Verificação de horário mínimo
+        if (novoInicio < 900) {
+            avisoErro.textContent = "Muito cedo. O horário mínimo para agendamento é 09:00.";
             avisoErro.style.display = "block";
             return;
         }
 
-        const agendados = agendamentos[chave] || [];
-
-        if (!diaTodo) {
-            const novoInicio = parseInt(inicio.replace(":", ""), 10);
-            const novoFim = parseInt(fim.replace(":", ""), 10);
-
-            const conflito = agendados.some(a => {
-                if (a.diaTodo) return true;
-                const [ini, fim] = a.horario.split(" - ").map(h => parseInt(h.replace(":", ""), 10));
-                return !(novoFim <= ini || novoInicio >= fim);
-            });
-
-            if (conflito) {
-                avisoErro.textContent = "Conflito de horário com outro agendamento. Escolha outro período.";
-                avisoErro.style.display = "block";
-                return;
-            }
-        } else {
-            if (agendados.length > 0) {
-                avisoErro.textContent = "Já existem agendamentos neste dia. Não é possível reservar o dia todo.";
-                avisoErro.style.display = "block";
-                return;
-            }
+        // 🌙 Verificação de horário máximo
+        if (novoFim > 2200) {
+            avisoErro.textContent = "Muito tarde. O horário máximo permitido é até 22:00.";
+            avisoErro.style.display = "block";
+            return;
         }
 
-        const horarioFinal = diaTodo ? "Dia inteiro" : `${inicio} - ${fim}`;
-        const dataFormatada = new Date(ano, mes, dia).toISOString().split("T")[0];
-
-        fetch("https://terrazzo-6lae.onrender.com/agendamentos", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                nome,
-                horario: horarioFinal,
-                dia: dataFormatada,
-                dia_todo: diaTodo
-            })
-        }).then(res => {
-            if (!res.ok) throw new Error(`Erro ${res.status} ao enviar agendamento`);
-            return res.json();
-        }).then(() => {
-            document.body.removeChild(modal);
-            socket.emit("atualizar");
-        }).catch(err => {
-            avisoErro.textContent = "🚫 Erro ao agendar. Tente novamente.";
-            avisoErro.style.display = "block";
-            console.error("⚠️ Falha no envio:", err.message);
+        // 🔁 Verificação de conflito com outros agendamentos
+        const conflito = agendados.some(a => {
+            if (a.diaTodo) return true;
+            const [ini, fim] = a.horario.split(" - ").map(h => parseInt(h.replace(":", ""), 10));
+            return !(novoFim <= ini || novoInicio >= fim);
         });
-    };
+
+        if (conflito) {
+            avisoErro.textContent = "Conflito de horário com outro agendamento. Escolha outro período.";
+            avisoErro.style.display = "block";
+            return;
+        }
+    } else {
+        if (agendados.length > 0) {
+            avisoErro.textContent = "Já existem agendamentos neste dia. Não é possível reservar o dia todo.";
+            avisoErro.style.display = "block";
+            return;
+        }
+    }
+
+    const horarioFinal = diaTodo ? "Dia inteiro" : `${inicio} - ${fim}`;
+    const dataFormatada = new Date(ano, mes, dia).toISOString().split("T")[0];
+
+    fetch("https://terrazzo-6lae.onrender.com/agendamentos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            nome,
+            horario: horarioFinal,
+            dia: dataFormatada,
+            dia_todo: diaTodo
+        })
+    }).then(res => {
+        if (!res.ok) throw new Error(`Erro ${res.status} ao enviar agendamento`);
+        return res.json();
+    }).then(() => {
+        document.body.removeChild(modal);
+        socket.emit("atualizar");
+    }).catch(err => {
+        avisoErro.textContent = "🚫 Erro ao agendar. Tente novamente.";
+        avisoErro.style.display = "block";
+        console.error("⚠️ Falha no envio:", err.message);
+    });
+};
 
     modal.appendChild(conteudo);
     document.body.appendChild(modal);
