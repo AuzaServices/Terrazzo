@@ -397,3 +397,29 @@ estiloExtra.textContent = "\n .dia-vermelho-borda {\n border-left-color: #818181
 }), 2e3), document.addEventListener("DOMContentLoaded", () => {
 
 });
+
+tsParticles.load("tsparticles", {
+  fullScreen: { enable: false },
+  particles: {
+    number: { value: 100 },
+    color: { value: "#ffffff" },
+    shape: { type: "circle" },
+    opacity: {
+      value: 0.8,
+      random: true
+    },
+    size: {
+      value: 4,
+      random: true
+    },
+    move: {
+      direction: "bottom",
+      enable: true,
+      speed: 1,
+      outModes: { default: "out" }
+    }
+  },
+  background: {
+    color: "transparent"
+  }
+});
