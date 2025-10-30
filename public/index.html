@@ -14,7 +14,9 @@
   <meta property="og:image" content="https://i.imgur.com/6PBvhpq.png">
 </head>
 <body>
+  <!-- Partículas de neve -->
   <div id="tsparticles"></div>
+
   <header>
     <img src="header.png" alt="Imagem do cabeçalho">
   </header>
@@ -40,21 +42,38 @@
         <li>4. No término do uso da área de lazer deixa-lá limpa.</li>
         <li>5. Antes de entrar na piscina TOMAR BANHO NO CHUVEIRO (Não usar Jeans ao entrar).</li>
         <li>6. Crianças na piscina devem estar acompanhadas de um adulto.</li>
-
       </ul>
     </section>
-
   </main>
 
-  <!-- Scripts necessários -->
-  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-  <script src="script.js"></script>
-  
   <footer style="text-align: center; padding: 20px; background-color: #00481b; font-size: 14px;">
-  <a href="https://www.instagram.com/andrielyson__/" target="_blank" style="text-decoration: none; color: #f8e0bd;">
-    Desenvolvido por <strong>Davi Nascimento</strong>
-  </a>
-</footer>
-<script src="https://cdn.jsdelivr.net/npm/tsparticles@2/tsparticles.bundle.min.js"></script>
+    <a href="https://www.instagram.com/andrielyson__/" target="_blank" style="text-decoration: none; color: #f8e0bd;">
+      Desenvolvido por <strong>Davi Nascimento</strong>
+    </a>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tsparticles@2/tsparticles.bundle.min.js"></script>
+<script>
+  tsParticles.load("tsparticles", {
+    fullScreen: { enable: false },
+    particles: {
+      number: { value: 300 }, // Aumenta o fluxo aqui
+      color: { value: "#ffffff" }, // dark red
+      shape: { type: "circle" },
+      opacity: { value: 0.8, random: true },
+      size: { value: 4, random: true },
+      move: {
+        direction: "bottom",
+        enable: true,
+        speed: 0.6,
+        outModes: { default: "out" }
+      }
+    },
+    background: { color: "transparent" }
+  });
+</script>
+  <script src="script.js"></script>
 </body>
 </html>

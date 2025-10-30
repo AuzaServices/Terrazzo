@@ -8,7 +8,7 @@
 
 :root {
     --azul: #00481b;
-    --fundo: #e6f7ff;
+    --fundo: #aac5b4;
     --branco: #ffffff;
     --cinza: #cccccc
 }
@@ -443,5 +443,6 @@ input[type=checkbox] {
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: -1; /* Fica atrás de todo o conteúdo */
+  z-index: 999; /* acima de tudo */
+  pointer-events: none; /* não interfere nos cliques */
 }
