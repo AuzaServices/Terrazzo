@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Terrazzo - Agenda Piscina & Deck</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="logo.png" type="image/png" />
+
+  <!-- Meta tags para compartilhamento -->
+  <meta property="og:title" content="Agendamento para usar a Piscina & Deck">
+  <meta property="og:description" content="Ultilize do espaço com responsabilidade e siga as regras">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://i.imgur.com/6PBvhpq.png">
+</head>
+<body>
+  <!-- Partículas de neve -->
+  <div id="tsparticles"></div>
+
+  <header>
+    <img src="header.png" alt="Imagem do cabeçalho">
+  </header>
+
+  <main>
+    <!-- Navegação entre meses -->
+    <div class="cabecalho-calendario">
+      <button id="btnAnterior">←</button>
+      <h2 id="mesAtual">Mês</h2>
+      <button id="btnProximo">→</button>
+    </div>
+
+    <!-- Calendário gerado pelo JS -->
+    <section id="calendar"></section>
+
+    <!-- Regras -->
+    <section id="rules">
+      <h2>Regras de Uso do Deck e Piscina</h2>
+      <ul>
+        <li>1. Não levar Comida e Bebida para a área da Piscina nem para dentro da mesma.</li>
+        <li>2. Não usar produtos quimicos como (Shampoo, Condicionador, Sabonete e etc...) ao entrar na piscina.</li>
+        <li>3. Horário de permanência na área do Deck e Piscina até as 22h00 (Ao anoitecer Manter as Luzes Acesas).</li>
+        <li>4. No término do uso da área de lazer deixa-lá limpa.</li>
+        <li>5. Antes de entrar na piscina TOMAR BANHO NO CHUVEIRO (Não usar Jeans ao entrar).</li>
+        <li>6. Crianças na piscina devem estar acompanhadas de um adulto.</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer style="text-align: center; padding: 20px; background-color: #00481b; font-size: 14px;">
+    <a href="https://www.instagram.com/andrielyson__/" target="_blank" style="text-decoration: none; color: #f8e0bd;">
+      Desenvolvido por <strong>Davi Nascimento</strong>
+    </a>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tsparticles@2/tsparticles.bundle.min.js"></script>
+<script>
+  tsParticles.load("tsparticles", {
+    fullScreen: { enable: false },
+    particles: {
+      number: { value: 300 }, // Aumenta o fluxo aqui
+      color: { value: "#ffffff" }, // dark red
+      shape: { type: "circle" },
+      opacity: { value: 0.8, random: true },
+      size: { value: 4, random: true },
+      move: {
+        direction: "bottom",
+        enable: true,
+        speed: 0.6,
+        outModes: { default: "out" }
+      }
+    },
+    background: { color: "transparent" }
+  });
+</script>
+  <script src="script.js"></script>
+</body>
+</html>
