@@ -6,6 +6,7 @@
   <title>Terrazzo - Agenda Piscina & Deck</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="icon" href="logo.png" type="image/png" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
   <!-- Meta tags para compartilhamento -->
   <meta property="og:title" content="Agendamento para usar a Piscina & Deck">
@@ -23,11 +24,11 @@
 
   <main>
     <!-- Navegação entre meses -->
-    <div class="cabecalho-calendario">
-      <button id="btnAnterior">←</button>
-      <h2 id="mesAtual">Mês</h2>
-      <button id="btnProximo">→</button>
-    </div>
+<div class="cabecalho-calendario">
+  <button id="btnAnterior"><i class="fa-solid fa-chevron-left"></i></button>
+  <h2 id="mesAtual">Mês</h2>
+  <button id="btnProximo"><i class="fa-solid fa-chevron-right"></i></button>
+</div>
 
     <!-- Calendário gerado pelo JS -->
     <section id="calendar"></section>
