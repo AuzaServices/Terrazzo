@@ -1,5 +1,5 @@
 const express = require("express");
-const mysql = require("mysql2");
+const mysql = require("mysql2/promise"); // ✅ versão promise
 const cors = require("cors");
 const path = require("path");
 const http = require("http");
@@ -42,12 +42,12 @@ const pool = mysql.createPool({
   database: "sql10799187",
   port: 3306,
   waitForConnections: true,
-  connectionLimit: 10,
+  connectionLimit: 5, // ✅ reduzido para não estourar limite
   queueLimit: 0
 });
 
 // 🧹 Limpeza anual automática
-function limpezaAnual() {
+async function limpezaAnual() {
   const hoje = new Date();
   const ehPrimeiroDeJaneiro = hoje.getDate() === 1 && hoje.getMonth() === 0;
   if (!ehPrimeiroDeJaneiro) return;
@@ -55,45 +55,46 @@ function limpezaAnual() {
   const anoAnterior = hoje.getFullYear() - 1;
   const anoAtual = hoje.getFullYear();
 
-  pool.query("DELETE FROM agendamentos WHERE YEAR(dia) = ?", [anoAnterior]);
-  pool.query("DELETE FROM status_dias WHERE YEAR(dia) = ?", [anoAnterior]);
+  await pool.query("DELETE FROM agendamentos WHERE YEAR(dia) = ?", [anoAnterior]);
+  await pool.query("DELETE FROM status_dias WHERE YEAR(dia) = ?", [anoAnterior]);
 
+  const values = [];
   for (let mes = 0; mes < 12; mes++) {
     const diasNoMes = new Date(anoAtual, mes + 1, 0).getDate();
     for (let dia = 1; dia <= diasNoMes; dia++) {
       const data = new Date(anoAtual, mes, dia);
       const diaSemana = data.getDay();
       if (diaSemana === 3 || diaSemana === 4) {
-        const diaFormatado = `${anoAtual}-${mes + 1}-${dia}`;
-        pool.query(
-          `INSERT IGNORE INTO status_dias (dia, status) VALUES (?, ?)`,
-          [diaFormatado, "limpeza"]
-        );
+        values.push([`${anoAtual}-${mes + 1}-${dia}`, "limpeza"]);
       }
     }
+  }
+  if (values.length > 0) {
+    await pool.query("INSERT IGNORE INTO status_dias (dia, status) VALUES ?", [values]);
   }
 }
 
 // 🧹 Limpeza de meses anteriores ao atual
-function limpezaMensal() {
+async function limpezaMensal() {
   const hoje = new Date();
   const mesAtual = hoje.getMonth() + 1;
   const anoAtual = hoje.getFullYear();
 
-  pool.query(
+  await pool.query(
     `DELETE FROM agendamentos WHERE (YEAR(dia) < ?) OR (YEAR(dia) = ? AND MONTH(dia) < ?)`,
     [anoAtual, anoAtual, mesAtual]
   );
-  pool.query(
+  await pool.query(
     `DELETE FROM status_dias WHERE (YEAR(dia) < ?) OR (YEAR(dia) = ? AND MONTH(dia) < ?)`,
     [anoAtual, anoAtual, mesAtual]
   );
 }
 
 // ✅ Preenche quartas e quintas até dezembro de 2026
-function preencherLimpezaAte2026() {
+async function preencherLimpezaAte2026() {
   const hoje = new Date();
   const anoFinal = 2026;
+  const values = [];
 
   for (let ano = hoje.getFullYear(); ano <= anoFinal; ano++) {
     for (let mes = 0; mes < 12; mes++) {
@@ -102,14 +103,13 @@ function preencherLimpezaAte2026() {
         const data = new Date(ano, mes, dia);
         const diaSemana = data.getDay();
         if (diaSemana === 3 || diaSemana === 4) {
-          const diaFormatado = `${ano}-${mes + 1}-${dia}`;
-          pool.query(
-            `INSERT IGNORE INTO status_dias (dia, status) VALUES (?, ?)`,
-            [diaFormatado, "limpeza"]
-          );
+          values.push([`${ano}-${mes + 1}-${dia}`, "limpeza"]);
         }
       }
     }
+  }
+  if (values.length > 0) {
+    await pool.query("INSERT IGNORE INTO status_dias (dia, status) VALUES ?", [values]);
   }
 }
 
@@ -119,14 +119,16 @@ app.get("/", (req, res) => {
 });
 
 // 📅 AGENDAMENTOS
-app.get("/agendamentos", (req, res) => {
-  pool.query("SELECT * FROM agendamentos", (err, resultados) => {
-    if (err) return res.status(500).json({ erro: err.message });
+app.get("/agendamentos", async (req, res) => {
+  try {
+    const [resultados] = await pool.query("SELECT * FROM agendamentos");
     res.json(resultados);
-  });
+  } catch (err) {
+    res.status(500).json({ erro: err.message });
+  }
 });
 
-app.post("/agendamentos", (req, res) => {
+app.post("/agendamentos", async (req, res) => {
   const { nome, horario, dia, dia_todo } = req.body;
   if (!nome || !horario || !dia) {
     return res.status(400).json({ erro: "Campos obrigatórios ausentes." });
@@ -142,61 +144,71 @@ app.post("/agendamentos", (req, res) => {
   }
 
   const diaTodoFormatado = dia_todo ? 1 : 0;
-  pool.query(
-    `INSERT INTO agendamentos (nome, horario, dia, dia_todo) VALUES (?, ?, ?, ?)`,
-    [nome, horario, dia, diaTodoFormatado],
-    (err, resultado) => {
-      if (err) return res.status(500).json({ erro: err.message });
-      res.json({ sucesso: true, id: resultado.insertId });
-      io.emit("atualizar");
-    }
-  );
+  try {
+    const [resultado] = await pool.query(
+      `INSERT INTO agendamentos (nome, horario, dia, dia_todo) VALUES (?, ?, ?, ?)`,
+      [nome, horario, dia, diaTodoFormatado]
+    );
+    res.json({ sucesso: true, id: resultado.insertId });
+    io.emit("atualizar");
+  } catch (err) {
+    res.status(500).json({ erro: err.message });
+  }
 });
 
-app.delete("/agendamentos/:id", (req, res) => {
+app.delete("/agendamentos/:id", async (req, res) => {
   const idAgendamento = req.params.id;
-  pool.query("DELETE FROM agendamentos WHERE id = ?", [idAgendamento], (err, resultado) => {
-    if (err) return res.status(500).json({ erro: err.message });
+  try {
+    const [resultado] = await pool.query("DELETE FROM agendamentos WHERE id = ?", [idAgendamento]);
     if (resultado.affectedRows === 0) {
       return res.status(404).json({ erro: "Agendamento não encontrado." });
     }
     res.json({ sucesso: true });
     io.emit("atualizar");
-  });
+  } catch (err) {
+    res.status(500).json({ erro: err.message });
+  }
 });
 
-app.get("/status-dia", (req, res) => {
-  pool.query("SELECT dia, status FROM status_dias", (err, resultados) => {
-    if (err) return res.status(500).json({ erro: err.message });
+app.get("/status-dia", async (req, res) => {
+  try {
+    const [resultados] = await pool.query("SELECT dia, status FROM status_dias");
     res.json(resultados);
-  });
+  } catch (err) {
+    res.status(500).json({ erro: err.message });
+  }
 });
 
 // 📡 WEBSOCKET
 io.on("connection", (socket) => {
-  socket.on("status-dia", ({ dia, status }) => {
+  socket.on("status-dia", async ({ dia, status }) => {
     if (!dia) return;
 
-    if (status === "livre") {
-      pool.query("DELETE FROM status_dias WHERE dia = ?", [dia]);
-      pool.query("DELETE FROM agendamentos WHERE dia = ?", [dia]);
-      io.emit("atualizar");
-    } else if (["manutencao", "bloqueado", "limpeza"].includes(status)) {
-      pool.query(
-        `INSERT INTO status_dias (dia, status) VALUES (?, ?) ON DUPLICATE KEY UPDATE status = VALUES(status)`,
-        [dia, status]
-      );
-      io.emit("atualizar");
+    try {
+      if (status === "livre") {
+        await pool.query("DELETE FROM status_dias WHERE dia = ?", [dia]);
+        await pool.query("DELETE FROM agendamentos WHERE dia = ?", [dia]);
+        io.emit("atualizar");
+      } else if (["manutencao", "bloqueado", "limpeza"].includes(status)) {
+        await pool.query(
+          `INSERT INTO status_dias (dia, status) VALUES (?, ?) ON DUPLICATE KEY UPDATE status = VALUES(status)`,
+          [dia, status]
+        );
+        io.emit("atualizar");
+      }
+    } catch (err) {
+      console.error("Erro no socket:", err.message);
     }
   });
 });
 
-
 // 🚀 INICIAR SERVIDOR
-limpezaAnual();
-limpezaMensal();
-preencherLimpezaAte2026();
+(async () => {
+  await limpezaAnual();
+  await limpezaMensal();
+  await preencherLimpezaAte2026();
 
-server.listen(PORT, "0.0.0.0", () => {
-  console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
-});
+  server.listen(PORT, "0.0.0.0", () => {
+    console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
+  });
+})();
