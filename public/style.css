@@ -446,3 +446,14 @@ input[type=checkbox] {
   z-index: 999; /* acima de tudo */
   pointer-events: none; /* não interfere nos cliques */
 }
+
+@media screen and (max-width: 600px) {
+  .cabecalho-calendario {
+    position: sticky;
+    top: 10px; /* mantém a margem do topo */
+    z-index: 100;
+    background-color: var(--branco);
+    border-radius: 8px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.35); /* sombra mais forte */
+  }
+}
