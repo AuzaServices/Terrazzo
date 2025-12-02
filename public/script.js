@@ -127,12 +127,24 @@ if (
   elementoDia.appendChild(botao);
 }
 
-        agendados.forEach((a) => {
-            const agendamentoEl = document.createElement("div");
-            agendamentoEl.className = "agendado";
-            agendamentoEl.textContent = `${a.nome} - ${a.horario}`;
-            elementoDia.appendChild(agendamentoEl);
-        });
+// Ordena os agendamentos pelo horário de início
+agendados.sort((a, b) => {
+    if (a.diaTodo) return 1;   // "Dia inteiro" sempre vai por último
+    if (b.diaTodo) return -1;
+
+    const inicioA = parseInt(a.horario.split(" - ")[0].replace(":", ""), 10);
+    const inicioB = parseInt(b.horario.split(" - ")[0].replace(":", ""), 10);
+
+    return inicioA - inicioB;
+});
+
+// Exibe os agendamentos já ordenados
+agendados.forEach((a) => {
+    const agendamentoEl = document.createElement("div");
+    agendamentoEl.className = "agendado";
+    agendamentoEl.textContent = `${a.nome} - ${a.horario}`;
+    elementoDia.appendChild(agendamentoEl);
+});
 
         let timeout;
         const iniciarPressao = () => {
