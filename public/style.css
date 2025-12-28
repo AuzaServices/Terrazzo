@@ -463,3 +463,26 @@ input[type=checkbox] {
   font-size: 22px;       /* controla o tamanho */
   vertical-align: middle;
 }
+
+/* Overlay com X vermelho gigante ocupando toda a tela */
+.x-fullscreen::before,
+.x-fullscreen::after {
+  content: "";
+  position: fixed;   /* cobre a tela toda */
+  top: 50%;
+  left: 50%;
+  width: 150%;       /* maior que 100% para atravessar bem a tela */
+  height: 20px;      /* espessura da linha */
+  background: #e51212;
+  transform-origin: center;
+  z-index: 9999;     /* acima de tudo */
+  border-radius: 8px;
+}
+
+.x-fullscreen::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.x-fullscreen::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
