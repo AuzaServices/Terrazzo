@@ -37,9 +37,9 @@ app.use(express.static("public"));
 // Banco de dados
 const pool = mysql.createPool({
   host: "sql10.freesqldatabase.com",
-  user: "sql10799187",
-  password: "NZdlWeIzBf",
-  database: "sql10799187",
+  user: "sql10797",
+  password: "NZdlWef",
+  database: "sql10799",
   port: 3306,
   waitForConnections: true,
   connectionLimit: 5, // ✅ reduzido para não estourar limite
